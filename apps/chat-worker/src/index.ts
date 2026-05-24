@@ -63,7 +63,8 @@ const REFUSE_PATTERNS = [
   /\bgive me (specific )?legal advice\b/i,
   /\byou (must|should) (tell|advise|instruct|order) me\b/i,
   /\bignore (all )?(previous|prior) (instructions|context|messages)\b/i,
-  /\bsystem prompt\b.*\b(reveal|show|leak|display)\b/i,
+  /\bsystem prompt\b.*\b(reveal|show|leak|display|verbatim)\b/i,
+  /\b(reveal|show|leak|display)\b.*\bsystem prompt\b/i,
   /\b(disregard|override) (the |your )?(rules|guardrails|safety)\b/i,
 ];
 
