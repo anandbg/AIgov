@@ -1,0 +1,64 @@
+---
+import { HEARTBEAT } from '~/config/site';
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// Resolve .heartbeat directory at the repo root (apps/site is two levels deep)
+const here = fileURLToPath(import.meta.url);
+const repoRoot = path.resolve(path.dirname(here), '../../../../');
+const heartbeatDir = path.join(repoRoot, HEARTBEAT.directory);
+
+type HeartbeatStatus = {
+  source: string;
+  lastRun: string;
+  ok: boolean;
+  expectedCadence: string;
+};
+
+let heartbeats: HeartbeatStatus[] = [];
+try {
+  const files = await readdir(heartbeatDir);
+  for (const file of files.filter((f) => f.startsWith('last-run-') && f.endsWith('.json'))) {
+    try {
+      const raw = await readFile(path.join(heartbeatDir, file), 'utf-8');
+      const data = JSON.parse(raw) as Partial<HeartbeatStatus>;
+      if (data.source && data.lastRun) {
+        heartbeats.push({
+          source: data.source,
+          lastRun: data.lastRun,
+          ok: data.ok ?? true,
+          expectedCadence: data.expectedCadence ?? 'unknown',
+        });
+      }
+    } catch {
+      /* skip malformed */
+    }
+  }
+} catch {
+  /* directory missing — Phase 1 default, no workflows have run yet */
+}
+---
+<section class="heartbeat-status" aria-label="Pipeline heartbeat status">
+  <h3>Pipeline health</h3>
+  {heartbeats.length === 0 ? (
+    <p class="heartbeat-empty">No heartbeats recorded yet. The keepalive workflow lands in Phase 1 (plan 01-07); per-source heartbeats land in Phase 3 (Tracking Pipeline).</p>
+  ) : (
+    <ul class="heartbeat-list">
+      {heartbeats.map((h) => (
+        <li class={h.ok ? 'heartbeat-ok' : 'heartbeat-fail'}>
+          {h.ok ? '✓' : '⚠'} <strong>{h.source}</strong> — last run {h.lastRun}, expected {h.expectedCadence}
+        </li>
+      ))}
+    </ul>
+  )}
+</section>
+
+<style>
+  .heartbeat-status { margin-top: 24px; }
+  .heartbeat-empty { font-style: italic; color: var(--sl-color-text-muted); }
+  .heartbeat-list { list-style: none; padding: 0; }
+  .heartbeat-list li { padding: 8px 12px; border-radius: 4px; margin-bottom: 4px; }
+  .heartbeat-ok { background: var(--sl-color-green-low, #dcfce7); color: var(--sl-color-green-high, #166534); }
+  .heartbeat-fail { background: var(--sl-color-red-low, #fee2e2); color: var(--sl-color-red-high, #991b1b); }
+</style>

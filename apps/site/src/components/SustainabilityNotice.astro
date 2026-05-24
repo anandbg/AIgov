@@ -1,17 +1,13 @@
 ---
 import { Icon } from 'astro-icon/components';
-
-// TODO: once plan 01-06 lands apps/site/src/config/site.ts, import the real flag:
-//   import { sustainabilityMode, lastFullReview } from '~/config/site';
-const sustainabilityMode = false;
-const lastFullReview = 'TBD';
+import { sustainabilityMode, sustainabilityLastReviewedAt } from '~/config/site';
 ---
 {sustainabilityMode && (
   <div role="status" class="sustainability-notice">
     <Icon name="lucide:clock-alert" class="su-icon" />
     <div class="su-body">
       <strong>Maintained at low cadence.</strong>
-      <span>Last full review: <code>{lastFullReview}</code>. Why? See <a href="/about/#sustainability">About</a>.</span>
+      <span>Last full review: <code>{sustainabilityLastReviewedAt}</code>. Why? See <a href="/about/#sustainability">About</a>.</span>
     </div>
   </div>
 )}
@@ -30,8 +26,5 @@ const lastFullReview = 'TBD';
   .sustainability-notice strong { font-weight: 700; margin-right: 6px; }
   .su-icon { flex: 0 0 auto; margin-top: 2px; }
   .su-body { flex: 1; }
-  .sustainability-notice a {
-    color: inherit;
-    text-decoration: underline;
-  }
+  .sustainability-notice a { color: inherit; text-decoration: underline; }
 </style>

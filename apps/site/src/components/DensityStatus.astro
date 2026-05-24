@@ -1,0 +1,51 @@
+---
+import { getCollection } from 'astro:content';
+import { DENSITY_THRESHOLD } from '~/config/site';
+
+const allDocs = await getCollection('docs');
+const stageDocs = allDocs.filter((entry) =>
+  entry.id.startsWith('stages/') && !entry.id.includes('_'),
+);
+const glossaryEntries = (await getCollection('glossary')).filter(
+  (e) => !e.id.startsWith('_'),
+);
+const snapshotEntries = (await getCollection('snapshots')).filter(
+  (e) => !e.id.includes('_'),
+);
+
+const stagesCount = stageDocs.length;
+const glossaryCount = glossaryEntries.length;
+const snapshotsCount = snapshotEntries.length;
+
+function bar(count: number, target: number, width = 12): string {
+  const filledChars = Math.min(width, Math.round((count / target) * width));
+  return '█'.repeat(filledChars) + '░'.repeat(width - filledChars);
+}
+function pct(count: number, target: number): number {
+  return Math.min(100, Math.round((count / target) * 100));
+}
+---
+<section class="density-status" aria-label="Content density status">
+  <h3>Density status</h3>
+  <pre class="density-bars">
+- Stage explainers:    [ {stagesCount} of {DENSITY_THRESHOLD.stages} ]  {bar(stagesCount, DENSITY_THRESHOLD.stages)}  ({pct(stagesCount, DENSITY_THRESHOLD.stages)}%)
+- Glossary terms:      [ {glossaryCount} of {DENSITY_THRESHOLD.glossaryTerms}+ ] {bar(glossaryCount, DENSITY_THRESHOLD.glossaryTerms)}  ({pct(glossaryCount, DENSITY_THRESHOLD.glossaryTerms)}%)
+- Regulation snapshots:[ {snapshotsCount} of {DENSITY_THRESHOLD.regulationSnapshots}+ ] {bar(snapshotsCount, DENSITY_THRESHOLD.regulationSnapshots)}  ({pct(snapshotsCount, DENSITY_THRESHOLD.regulationSnapshots)}%)
+- Lawyer review:       Not started  {'░'.repeat(12)}
+  </pre>
+</section>
+
+<style>
+  .density-status { font-family: var(--sl-font-mono, var(--font-mono)); }
+  .density-bars {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--sl-color-text);
+    background: var(--sl-color-bg-sidebar);
+    padding: 16px;
+    border-radius: 4px;
+    border: 1px solid var(--sl-color-gray-5);
+    white-space: pre;
+    overflow-x: auto;
+  }
+</style>
