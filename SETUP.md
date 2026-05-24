@@ -97,6 +97,39 @@ The site is fronted by Cloudflare's free CDN. **Bandwidth shielding only works i
 7. **Always Use HTTPS:** turn ON.
 8. **Auto Minify:** leave OFF (Astro already minifies; double-minify can corrupt inline JSON).
 
+### Cloudflare Cache Rules (exact configuration)
+
+Copy-paste this when configuring rules in the Cloudflare dashboard:
+
+```
+1. In Cloudflare dashboard → your zone → Caching → Cache Rules
+2. Create rule "Hashed assets — long cache":
+   - When incoming requests match: URI Path starts with /_astro/
+   - Then: Eligible for cache, Cache TTL: 1 year, Edge Cache TTL: 1 year, Browser Cache TTL: 1 year
+   - Add response header: Cache-Control: public, max-age=31536000, immutable
+3. Create rule "HTML routes — short cache":
+   - When incoming requests match: URI Path ends with / OR URI Path ends with .html
+   - Then: Eligible for cache, Cache TTL: 5 minutes, Browser Cache TTL: 5 minutes
+   - Add response header: Cache-Control: public, max-age=300, must-revalidate
+4. Order rules: hashed-assets first (more specific), HTML routes second
+```
+
+### GitHub Pages "Custom domain" field
+
+Pages settings → Custom domain field → enter `SITE_DOMAIN` value once registered.
+
+**DO NOT enable "Enforce HTTPS"** until Cloudflare proxy is set to Full (strict) — otherwise the cert chain breaks until propagation completes (~24h).
+
+### Verifying the deploy
+
+After the first push to `main`:
+
+1. Watch the Actions tab → "Deploy site" workflow run; it should complete in <2 min.
+2. The deploy job output prints the Pages URL (`https://<org>.github.io/AIgov/` until custom domain is configured).
+3. Open the URL — should render the landing page with the 12-stage sidebar.
+4. Inspect Network tab — confirm no requests to `fonts.googleapis.com`, no third-party scripts.
+5. Once Cloudflare proxy is in place, the URL will resolve via `SITE_DOMAIN` and `Cache-Control` headers should be visible in response headers.
+
 ---
 
 ## Required GitHub Secrets
