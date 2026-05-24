@@ -1,0 +1,33 @@
+name = "aigov-chat-worker"
+main = "src/index.ts"
+compatibility_date = "2026-05-01"
+
+# Phase 5 deploy is gated on user-action items in SETUP.md (Cloudflare account,
+# Workers paid plan if traffic exceeds free quota, Anthropic key). Until then,
+# `wrangler dev` runs locally against a stub Vectorize binding.
+
+[vars]
+SITE_DOMAIN = "ai-governance.example"
+TURNSTILE_SITE_KEY = ""             # Phase 5 final wiring
+ANTHROPIC_MODEL = "claude-haiku-4-5"
+MAX_REQUESTS_PER_HOUR_PER_IP = "20"
+DAILY_BUDGET_USD = "1.0"
+
+# Vectorize index for retrieval (read-only token at runtime).
+# [[vectorize]]
+# binding = "VECTORIZE"
+# index_name = "aigov-content"
+
+# Workers AI for the BGE-base query-side embedding.
+# [ai]
+# binding = "AI"
+
+# KV namespace for rate limiting (per-IP hourly buckets) and semantic cache.
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "REPLACE_WITH_KV_ID"
+
+# Secrets to set via `wrangler secret put`:
+#   ANTHROPIC_API_KEY        — required
+#   TURNSTILE_SECRET_KEY     — required if Turnstile enabled
+#   HEARTBEAT_WEBHOOK_URL    — optional

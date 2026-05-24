@@ -4,7 +4,20 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo 'chat-worker scaffolds in Phase 5'",
-    "typecheck": "echo 'pending Phase 5'"
+    "build": "echo 'worker runs via wrangler — no build step'",
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@aigov/shared": "workspace:*",
+    "@anthropic-ai/sdk": "0.65.0",
+    "hono": "4.6.20",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260524.1",
+    "typescript": "5.6.3",
+    "wrangler": "3.114.16"
   }
 }

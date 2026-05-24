@@ -3,8 +3,21 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "aigov-embed": "./src/index.ts"
+  },
   "scripts": {
-    "build": "echo 'embed-cli scaffolds in Phase 5'",
-    "typecheck": "echo 'pending Phase 5'"
+    "build": "echo 'embed-cli runs via tsx — no build step'",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "embed": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@aigov/shared": "workspace:*",
+    "gray-matter": "4.0.3",
+    "zod": "3.23.8"
+  },
+  "devDependencies": {
+    "tsx": "4.22.3",
+    "typescript": "5.6.3"
   }
 }
