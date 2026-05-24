@@ -1,0 +1,350 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import wizardData from '~/data/wizard.json';
+
+const { questions } = wizardData;
+---
+<StarlightPage frontmatter={{ title: 'Wizard — topics to discuss with counsel', description: 'Answer five questions; receive a checklist of governance topics — cross-linked to the 12-stage narrative.', tableOfContents: false }}>
+  <p>This wizard collects no personal data. Your answers are encoded into the URL hash; the resulting URL is shareable and reproduces the same checklist. The output is framed as <strong>topics to discuss with counsel for your jurisdiction</strong> — not a tailored compliance checklist, not legal advice.</p>
+
+  <section id="wizard-jurisdiction-disclaimer" class="juris-disclaimer" hidden>
+    <strong>Per-jurisdiction note:</strong>
+    <span id="wizard-jurisdiction-note"></span>
+  </section>
+
+  <form id="wizard-form" class="wizard-form" aria-label="AI governance wizard">
+    {questions.map((q, idx) => (
+      <fieldset class="wizard-q" data-qid={q.id}>
+        <legend><span class="wizard-q-num">{idx + 1}.</span> {q.prompt}</legend>
+        <div class="wizard-q-options">
+          {q.options.map((opt) => (
+            <label class="wizard-q-opt">
+              <input type="radio" name={q.id} value={opt.value} />
+              <span>{opt.label}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    ))}
+    <div class="wizard-actions">
+      <button type="submit" class="wizard-submit">See topics</button>
+      <button type="reset" class="wizard-reset">Reset</button>
+    </div>
+  </form>
+
+  <section id="wizard-output" class="wizard-output" hidden aria-live="polite">
+    <h2 id="wizard-output-title">Topics to discuss with counsel</h2>
+    <p id="wizard-output-summary"></p>
+    <ol id="wizard-output-list" class="wizard-checklist"></ol>
+    <div class="wizard-output-actions">
+      <button type="button" id="wizard-copy" class="wizard-copy">Copy as Markdown</button>
+      <button type="button" id="wizard-print" class="wizard-print">Print / save as PDF</button>
+      <a id="wizard-share" class="wizard-share" href="#">Copy shareable URL</a>
+    </div>
+    <p class="wizard-footer-disclaimer">This is not legal advice. The items above are governance topics to raise with qualified counsel for the jurisdiction you selected.</p>
+  </section>
+</StarlightPage>
+
+<script>
+  import wizardData from '../data/wizard.json';
+  type Topic = (typeof wizardData)['topics'][number];
+
+  const JURISDICTION_NOTES: Record<string, string> = {
+    eu: 'EU AI Act + GDPR apply. The questions below frame obligations for both provider and deployer roles.',
+    uk: 'UK GDPR + Information Commissioner\'s Office guidance apply. The UK does not currently have a horizontal AI Act; sectoral regulators set expectations.',
+    us: 'Federal law in the US relies on NIST AI RMF (voluntary) plus sector-specific rules. State law may add binding obligations.',
+    'us-state': 'A US state law (e.g., Colorado AI Act, Illinois BIPA, NYC Local Law 144) is in scope. State-by-state checks are essential.',
+    apac: 'APAC jurisdictions (Japan, Singapore, Australia) currently rely on voluntary frameworks. Cross-border data flows often trigger additional obligations.',
+    global: 'Multiple jurisdictions apply. The strictest applicable obligation typically governs the design.',
+  };
+
+  type Answers = Record<string, string>;
+
+  function readHash(): Answers {
+    const hash = window.location.hash.replace(/^#/, '');
+    if (!hash) return {};
+    try {
+      const params = new URLSearchParams(hash);
+      const v = params.get('v');
+      if (v !== '1') return {};
+      const out: Answers = {};
+      for (const [k, val] of params.entries()) {
+        if (k !== 'v') out[k] = val;
+      }
+      return out;
+    } catch {
+      return {};
+    }
+  }
+
+  function writeHash(a: Answers): void {
+    const params = new URLSearchParams();
+    params.set('v', '1');
+    for (const [k, v] of Object.entries(a)) params.set(k, v);
+    window.history.replaceState(null, '', `#${params.toString()}`);
+  }
+
+  function topicApplies(t: Topic, a: Answers): boolean {
+    const cond = t.applies as Record<string, unknown>;
+    if (cond.always === true) return true;
+    for (const [key, allowed] of Object.entries(cond)) {
+      if (key === 'always') continue;
+      const ans = a[key];
+      if (!ans) return false;
+      if (Array.isArray(allowed) && !(allowed as string[]).includes(ans)) return false;
+    }
+    return true;
+  }
+
+  function clearList(el: Element): void {
+    while (el.firstChild) el.removeChild(el.firstChild);
+  }
+
+  function render(answers: Answers): void {
+    const allAnswered = wizardData.questions.every((q) => !!answers[q.id]);
+    if (!allAnswered) return;
+
+    const disclaimerBox = document.getElementById('wizard-jurisdiction-disclaimer');
+    const disclaimerText = document.getElementById('wizard-jurisdiction-note');
+    if (disclaimerBox && disclaimerText) {
+      const note = JURISDICTION_NOTES[answers.jurisdiction!] ?? '';
+      if (note) {
+        disclaimerText.textContent = note;
+        disclaimerBox.hidden = false;
+      } else {
+        disclaimerBox.hidden = true;
+      }
+    }
+
+    const matched = (wizardData.topics as Topic[]).filter((t) => topicApplies(t, answers));
+    const list = document.getElementById('wizard-output-list');
+    const out = document.getElementById('wizard-output');
+    const summary = document.getElementById('wizard-output-summary');
+    if (!list || !out || !summary) return;
+    clearList(list);
+    summary.textContent = `${matched.length} topics surfaced based on your answers.`;
+    for (const t of matched) {
+      const li = document.createElement('li');
+      const label = document.createElement('label');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      label.appendChild(cb);
+      const text = document.createElement('span');
+      text.textContent = ' ' + t.label;
+      label.appendChild(text);
+      li.appendChild(label);
+
+      const meta = document.createElement('div');
+      meta.className = 'wizard-checklist-meta';
+      const stageLink = document.createElement('a');
+      stageLink.href = `/stages/${t.stage}/`;
+      stageLink.textContent = `→ stage ${t.stage.split('-')[0]}`;
+      meta.appendChild(stageLink);
+      for (const c of t.citations) {
+        const sep = document.createTextNode(' · ');
+        meta.appendChild(sep);
+        const a = document.createElement('a');
+        a.href = `/regulations/${c.source}/`;
+        a.textContent = c.label;
+        meta.appendChild(a);
+      }
+      li.appendChild(meta);
+      list.appendChild(li);
+    }
+    out.hidden = false;
+
+    const share = document.getElementById('wizard-share') as HTMLAnchorElement | null;
+    if (share) share.href = window.location.href;
+  }
+
+  function copyMarkdown(answers: Answers): void {
+    const matched = (wizardData.topics as Topic[]).filter((t) => topicApplies(t, answers));
+    const lines: string[] = [];
+    lines.push('# Topics to discuss with counsel — AI governance');
+    lines.push('');
+    lines.push(`Generated from <${window.location.href}>`);
+    lines.push('');
+    for (const t of matched) {
+      const cites = t.citations.map((c) => `[${c.label}](/regulations/${c.source}/)`).join(' · ');
+      lines.push(`- [ ] ${t.label} — [stage ${t.stage.split('-')[0]}](/stages/${t.stage}/) · ${cites}`);
+    }
+    lines.push('');
+    lines.push('_This is not legal advice. The items above are governance topics to raise with qualified counsel for the selected jurisdiction._');
+    const md = lines.join('\n');
+    void navigator.clipboard.writeText(md).then(
+      () => {
+        const btn = document.getElementById('wizard-copy');
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = 'Copied!';
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        }
+      },
+      () => alert('Could not access clipboard — copy manually from the page.'),
+    );
+  }
+
+  function attach() {
+    const form = document.getElementById('wizard-form') as HTMLFormElement | null;
+    if (!form) return;
+    const initial = readHash();
+    for (const [k, v] of Object.entries(initial)) {
+      const radio = form.querySelector<HTMLInputElement>(`input[name="${k}"][value="${v}"]`);
+      if (radio) radio.checked = true;
+    }
+    if (Object.keys(initial).length === wizardData.questions.length) {
+      render(initial);
+    }
+
+    form.addEventListener('change', () => {
+      const data = new FormData(form);
+      const ans: Answers = {};
+      for (const [k, v] of data.entries()) ans[k] = String(v);
+      writeHash(ans);
+      const allAnswered = wizardData.questions.every((q) => !!ans[q.id]);
+      if (allAnswered) render(ans);
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const ans: Answers = {};
+      for (const [k, v] of data.entries()) ans[k] = String(v);
+      writeHash(ans);
+      render(ans);
+      document.getElementById('wizard-output')?.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    form.addEventListener('reset', () => {
+      window.history.replaceState(null, '', window.location.pathname);
+      const out = document.getElementById('wizard-output');
+      if (out) out.hidden = true;
+      const disc = document.getElementById('wizard-jurisdiction-disclaimer');
+      if (disc) disc.hidden = true;
+    });
+
+    document.getElementById('wizard-copy')?.addEventListener('click', () => {
+      const data = new FormData(form);
+      const ans: Answers = {};
+      for (const [k, v] of data.entries()) ans[k] = String(v);
+      copyMarkdown(ans);
+    });
+
+    document.getElementById('wizard-print')?.addEventListener('click', () => {
+      window.print();
+    });
+
+    document.getElementById('wizard-share')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      void navigator.clipboard.writeText(window.location.href);
+    });
+  }
+  attach();
+</script>
+
+<style>
+  .wizard-form { margin: 24px 0; }
+  .wizard-q {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .wizard-q legend {
+    padding: 0 8px;
+    font-weight: 600;
+  }
+  .wizard-q-num {
+    font-family: var(--font-mono, ui-monospace);
+    color: var(--sl-color-accent);
+    margin-right: 6px;
+  }
+  .wizard-q-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .wizard-q-opt {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .wizard-q-opt:hover { background: var(--sl-color-bg-sidebar); }
+  .wizard-q-opt input { margin-top: 4px; }
+  .wizard-actions { display: flex; gap: 12px; }
+  .wizard-submit, .wizard-reset {
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: 1px solid var(--sl-color-accent);
+    background: var(--sl-color-accent);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .wizard-reset { background: transparent; color: var(--sl-color-accent); }
+  .juris-disclaimer {
+    background: var(--sl-color-info-low, #d1ecf1);
+    color: var(--sl-color-info-high, #0c5460);
+    border-left: 4px solid var(--sl-color-info, #17a2b8);
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 16px 0;
+  }
+  .wizard-output {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px solid var(--sl-color-gray-5);
+  }
+  .wizard-checklist {
+    list-style: none;
+    padding: 0;
+  }
+  .wizard-checklist li {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: var(--sl-color-bg-sidebar);
+    border-radius: 6px;
+  }
+  .wizard-checklist label {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-weight: 500;
+  }
+  .wizard-checklist-meta {
+    font-size: 13px;
+    color: var(--sl-color-text-muted);
+    margin-top: 6px;
+    margin-left: 24px;
+  }
+  .wizard-checklist-meta a {
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+  .wizard-output-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+  }
+  .wizard-copy, .wizard-print, .wizard-share {
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--sl-color-gray-5);
+    background: var(--sl-color-bg);
+    color: var(--sl-color-text);
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .wizard-footer-disclaimer {
+    margin-top: 24px;
+    color: var(--sl-color-text-muted);
+    font-size: 13px;
+    font-style: italic;
+  }
+</style>

@@ -1,0 +1,208 @@
+{
+  "version": 1,
+  "questions": [
+    {
+      "id": "role",
+      "prompt": "Are you the provider or the deployer of the AI system?",
+      "options": [
+        { "value": "provider", "label": "Provider — we build / put it on the market" },
+        { "value": "deployer", "label": "Deployer — we use it under our authority" },
+        { "value": "both", "label": "Both — we build and deploy it ourselves" }
+      ]
+    },
+    {
+      "id": "jurisdiction",
+      "prompt": "Which jurisdiction's law primarily applies?",
+      "options": [
+        { "value": "eu", "label": "European Union (EU AI Act + GDPR)" },
+        { "value": "uk", "label": "United Kingdom (UK GDPR + ICO guidance)" },
+        { "value": "us", "label": "United States (federal — NIST AI RMF, sector-specific rules)" },
+        { "value": "us-state", "label": "United States — state law in scope (e.g., Colorado AI Act)" },
+        { "value": "apac", "label": "APAC (Japan/Singapore/Australia — voluntary frameworks dominant)" },
+        { "value": "global", "label": "Global / mixed — multiple jurisdictions" }
+      ]
+    },
+    {
+      "id": "tier",
+      "prompt": "What is the system's risk tier?",
+      "options": [
+        { "value": "high-risk", "label": "High-risk (EU AI Act Annex III, or equivalent context)" },
+        { "value": "limited-risk", "label": "Limited risk (transparency obligations only)" },
+        { "value": "minimal-risk", "label": "Minimal risk (no specific obligations)" },
+        { "value": "unsure", "label": "Unsure — need to classify" }
+      ]
+    },
+    {
+      "id": "agentic",
+      "prompt": "Does the system take actions in the world (send emails, place orders, modify files), or only produce predictions/text?",
+      "options": [
+        { "value": "agentic", "label": "Agentic — it acts" },
+        { "value": "predictive", "label": "Predictive — outputs only" }
+      ]
+    },
+    {
+      "id": "sensitive",
+      "prompt": "Does the system process personal data, health data, biometrics, or other sensitive categories?",
+      "options": [
+        { "value": "yes-special", "label": "Yes — including special-category data (health, biometrics, beliefs, etc.)" },
+        { "value": "yes-personal", "label": "Yes — personal data, not special-category" },
+        { "value": "no", "label": "No — non-personal data only" }
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "id": "ai-policy-fit",
+      "label": "Confirm the system fits within your AI policy's permitted-use list",
+      "stage": "01-ai-policy",
+      "citations": [
+        { "source": "iso-iec-42001", "article": "Clause-5.2", "label": "ISO/IEC 42001 §5.2" }
+      ],
+      "applies": { "always": true }
+    },
+    {
+      "id": "tier-rationale",
+      "label": "Document the risk-tier classification rationale (one page, dated, signed)",
+      "stage": "02-risk-tiering",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-6", "label": "EU AI Act Art. 6" }
+      ],
+      "applies": { "always": true }
+    },
+    {
+      "id": "annex-iii-mapping",
+      "label": "Map the use-case against EU AI Act Annex III to confirm the high-risk classification",
+      "stage": "02-risk-tiering",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Annex-III", "label": "EU AI Act Annex III" }
+      ],
+      "applies": { "jurisdiction": ["eu", "global"], "tier": ["high-risk", "unsure"] }
+    },
+    {
+      "id": "conformity-assessment",
+      "label": "Plan the conformity-assessment process (Art. 43) — internal vs notified-body route",
+      "stage": "04-compliance",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-43", "label": "EU AI Act Art. 43" }
+      ],
+      "applies": { "jurisdiction": ["eu", "global"], "tier": ["high-risk"], "role": ["provider", "both"] }
+    },
+    {
+      "id": "art-11-documentation",
+      "label": "Draft technical documentation against EU AI Act Annex IV structure",
+      "stage": "08-documentation",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-11", "label": "EU AI Act Art. 11" }
+      ],
+      "applies": { "jurisdiction": ["eu", "global"], "tier": ["high-risk"], "role": ["provider", "both"] }
+    },
+    {
+      "id": "deployer-obligations",
+      "label": "Confirm deployer obligations (Art. 26) — human oversight, monitoring, logs",
+      "stage": "09-accountability",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-26", "label": "EU AI Act Art. 26" }
+      ],
+      "applies": { "jurisdiction": ["eu", "global"], "role": ["deployer", "both"] }
+    },
+    {
+      "id": "dpia",
+      "label": "Run a Data Protection Impact Assessment under UK GDPR / EU GDPR Article 35",
+      "stage": "06-data-controls",
+      "citations": [
+        { "source": "uk-ico", "article": "DPIA-AI", "label": "ICO DPIA guidance" }
+      ],
+      "applies": { "jurisdiction": ["eu", "uk", "global"], "sensitive": ["yes-special", "yes-personal"] }
+    },
+    {
+      "id": "lawful-basis",
+      "label": "Document a lawful basis under GDPR Article 6 (and Art. 9 conditions for special-category data)",
+      "stage": "06-data-controls",
+      "citations": [
+        { "source": "uk-ico", "article": "Lawful-Basis", "label": "ICO lawful-basis guidance" }
+      ],
+      "applies": { "jurisdiction": ["eu", "uk", "global"], "sensitive": ["yes-special", "yes-personal"] }
+    },
+    {
+      "id": "nist-rmf-mapping",
+      "label": "Map controls onto NIST AI RMF Govern / Map / Measure / Manage",
+      "stage": "04-compliance",
+      "citations": [
+        { "source": "nist-ai-rmf", "article": "Overview", "label": "NIST AI RMF 1.0" }
+      ],
+      "applies": { "jurisdiction": ["us", "us-state", "global"] }
+    },
+    {
+      "id": "state-law-check",
+      "label": "Run a state-by-state check (Colorado AI Act, Illinois BIPA, NYC Local Law 144, etc.)",
+      "stage": "04-compliance",
+      "citations": [
+        { "source": "nist-ai-rmf", "article": "GOVERN-1", "label": "NIST AI RMF GOVERN" }
+      ],
+      "applies": { "jurisdiction": ["us", "us-state"] }
+    },
+    {
+      "id": "third-party-clauses",
+      "label": "Add AI-specific clauses to vendor procurement (data-use, change-notification, audit rights)",
+      "stage": "05-third-party-risk",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-25", "label": "EU AI Act Art. 25" }
+      ],
+      "applies": { "role": ["deployer", "both"] }
+    },
+    {
+      "id": "kill-switch",
+      "label": "Define a kill-switch mechanism at the tool layer (not the prompt layer)",
+      "stage": "10-agentic-oversight",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-14", "label": "EU AI Act Art. 14" }
+      ],
+      "applies": { "agentic": ["agentic"] }
+    },
+    {
+      "id": "action-allowlist",
+      "label": "Build a tool-layer action allowlist with explicit per-action reversibility tier",
+      "stage": "10-agentic-oversight",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-14", "label": "EU AI Act Art. 14" }
+      ],
+      "applies": { "agentic": ["agentic"] }
+    },
+    {
+      "id": "incident-runbook",
+      "label": "Stand up an incident runbook with 15-day notification timer (EU AI Act Art. 73)",
+      "stage": "11-incident-response",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-73", "label": "EU AI Act Art. 73" }
+      ],
+      "applies": { "tier": ["high-risk"], "jurisdiction": ["eu", "global"] }
+    },
+    {
+      "id": "post-market-monitoring",
+      "label": "Plan post-market monitoring (Art. 72): which signals, who owns them, where do they alert",
+      "stage": "12-monitoring",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-72", "label": "EU AI Act Art. 72" }
+      ],
+      "applies": { "tier": ["high-risk"], "jurisdiction": ["eu", "global"] }
+    },
+    {
+      "id": "redteam-suite",
+      "label": "Wire OWASP LLM Top 10 + relevant MITRE ATLAS techniques into a regression suite",
+      "stage": "07-red-teaming",
+      "citations": [
+        { "source": "eu-ai-act", "article": "Art-15", "label": "EU AI Act Art. 15" }
+      ],
+      "applies": { "always": true }
+    },
+    {
+      "id": "iso-42001-aims",
+      "label": "Decide whether to certify against ISO/IEC 42001 (AIMS) — organisational scope and timing",
+      "stage": "01-ai-policy",
+      "citations": [
+        { "source": "iso-iec-42001", "article": "Clause-5", "label": "ISO/IEC 42001 Clause 5" }
+      ],
+      "applies": { "always": true }
+    }
+  ]
+}
