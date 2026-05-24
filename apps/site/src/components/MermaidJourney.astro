@@ -1,4 +1,9 @@
 ---
+/* Pure HTML/CSS journey visualisation. Previously rendered via Mermaid +
+ * astro-mermaid client-side, but the integration's view-transition re-init
+ * was occasionally wiping page content and leaving "Syntax error in text —
+ * mermaid version 11.15.0" banners on the screen. A static SSR diagram with
+ * no JavaScript has none of those failure modes. */
 import { withBase } from '@aigov/shared';
 const BASE = import.meta.env.BASE_URL;
 
@@ -6,7 +11,6 @@ interface Props {
   currentStage?: number;
 }
 const { currentStage } = Astro.props as Props;
-const wrapperClass = ['mermaid-journey', currentStage ? `current-S${currentStage}` : ''].filter(Boolean).join(' ');
 
 type Stage = { id: string; label: string; slug: string; phase: number };
 type Phase = { num: number; title: string; tagline: string; stages: Stage[] };
@@ -54,136 +58,188 @@ const phases: Phase[] = [
   },
 ];
 
-const stages: Stage[] = phases.flatMap((p) => p.stages);
-const currentPhase = currentStage ? phases.find((p) => p.stages.some((s) => parseInt(s.id.slice(1), 10) === currentStage))?.num : undefined;
-
-// Multi-row layout: 4 rows of 3 stages, grouped by phase. Renders compact and
-// readable instead of a 12-node horizontal sliver. Each phase subgraph flows
-// left-to-right; phases connect top-to-bottom so the whole journey reads like
-// a board game laid out on a page rather than a single squashed line.
-const phaseLines = phases.flatMap((p) => {
-  const arrow = p.stages.map((s) => `${s.id}[${s.label}]`).join(' --> ');
-  return [
-    `  subgraph P${p.num} ["Phase ${p.num} · ${p.title}"]`,
-    `    direction LR`,
-    `    ${arrow}`,
-    `  end`,
-  ];
-});
-
-const phaseLinks: string[] = [];
-for (let i = 0; i < phases.length - 1; i++) {
-  const last = phases[i].stages[phases[i].stages.length - 1].id;
-  const first = phases[i + 1].stages[0].id;
-  phaseLinks.push(`  ${last} --> ${first}`);
-}
-
-const styleLines: string[] = [];
-if (currentStage) {
-  styleLines.push(`  style S${currentStage} fill:#4f46e5,stroke:#312e81,stroke-width:2px,color:#ffffff`);
-}
-if (currentPhase) {
-  styleLines.push(`  style P${currentPhase} fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px`);
-}
-
-// Note: we used to add Mermaid `click` directives so diagram boxes were links,
-// but a regression in astro-mermaid + mermaid 11 caused some click directives
-// to wipe the surrounding page during view-transition re-init. The inline list
-// below the diagram (rendered with <details open>) provides reliable, visible
-// links to every stage on every viewport, so the click directives are dropped.
-
-const diagram = [
-  'flowchart TB',
-  ...phaseLines,
-  ...phaseLinks,
-  ...styleLines,
-].join('\n');
+const wrapperClass = ['journey-board', currentStage ? `current-S${currentStage}` : ''].filter(Boolean).join(' ');
 ---
-<div class={wrapperClass}>
-  <pre class="mermaid">{diagram}</pre>
-
-  <details class="mermaid-fallback" open>
-    <summary>List view of the 12-stage journey</summary>
-    {phases.map((p) => (
-      <section class="mermaid-fallback-phase">
-        <h4>Phase {p.num} · {p.title}</h4>
-        <p class="mermaid-fallback-tagline">{p.tagline}</p>
-        <ol>
-          {p.stages.map((s) => {
+<nav class={wrapperClass} aria-label="The 12-stage AI governance journey">
+  {phases.map((p, idx) => {
+    const isLast = idx === phases.length - 1;
+    return (
+      <section class={`journey-phase journey-phase-${p.num}`}>
+        <header class="journey-phase-head">
+          <span class="journey-phase-num">Phase {p.num}</span>
+          <h3 class="journey-phase-title">{p.title}</h3>
+          <p class="journey-phase-tag">{p.tagline}</p>
+        </header>
+        <ol class="journey-stages">
+          {p.stages.map((s, sidx) => {
             const n = parseInt(s.id.slice(1), 10);
             const isHere = currentStage === n;
+            const showArrow = sidx < p.stages.length - 1;
             return (
-              <li>
-                <a href={withBase(BASE, `/stages/${s.slug}/`)} class={isHere ? 'current' : ''}>{s.label}</a>
-                {isHere && <span class="mermaid-here"> ← you are here</span>}
-              </li>
+              <>
+                <li class={isHere ? 'journey-stage current' : 'journey-stage'}>
+                  <a href={withBase(BASE, `/stages/${s.slug}/`)} class="journey-stage-link">
+                    <span class="journey-stage-num">{n}</span>
+                    <span class="journey-stage-label">{s.label.replace(/^\d+\.\s*/, '')}</span>
+                  </a>
+                  {isHere && <span class="journey-here">you are here</span>}
+                </li>
+                {showArrow && <li aria-hidden="true" class="journey-arrow">→</li>}
+              </>
             );
           })}
         </ol>
+        {!isLast && <div aria-hidden="true" class="journey-phase-arrow">↓</div>}
       </section>
-    ))}
-  </details>
-</div>
+    );
+  })}
+</nav>
 
 <style>
-  .mermaid-journey {
-    container-type: inline-size;
+  .journey-board {
+    display: grid;
+    gap: 14px;
+    margin: 20px 0 24px;
   }
-  .mermaid-journey :global(.mermaid) {
-    margin: 16px auto;
-    text-align: center;
-    /* Give the multi-row diagram more vertical room so node text stays readable. */
-    min-height: 320px;
-  }
-  .mermaid-journey :global(.mermaid svg) {
-    max-width: 100%;
-    height: auto;
-    /* The diagram now has 4 rows; ensure phase labels stay legible. */
-    font-size: 14px;
-  }
-  .mermaid-journey :global(.mermaid .cluster rect) {
-    rx: 10px;
-    ry: 10px;
-  }
-  .mermaid-journey :global(.mermaid .cluster-label) {
-    font-weight: 600;
-  }
-  pre.mermaid[data-mermaid-source] {
-    font-family: var(--font-mono, ui-monospace);
-    font-size: 12px;
-    color: var(--sl-color-text-muted);
+  .journey-phase {
     background: var(--sl-color-bg-sidebar);
-    padding: 12px;
-    border-radius: 6px;
-    overflow-x: auto;
-    white-space: pre;
+    border-radius: 12px;
+    padding: 14px 16px 18px;
+    border-left: 4px solid var(--sl-color-accent);
+    position: relative;
   }
-  .mermaid-fallback {
-    margin-top: 12px;
-    font-size: 14px;
-    color: var(--sl-color-text-muted);
+  .journey-phase-1 { border-left-color: #6366f1; }
+  .journey-phase-2 { border-left-color: #0891b2; }
+  .journey-phase-3 { border-left-color: #16a34a; }
+  .journey-phase-4 { border-left-color: #d97706; }
+
+  .journey-phase-head {
+    margin-bottom: 12px;
   }
-  .mermaid-fallback-phase {
-    margin-top: 12px;
+  .journey-phase-num {
+    display: inline-block;
+    font-family: var(--font-mono, ui-monospace);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--sl-color-accent);
+    color: var(--sl-color-accent);
+    background: var(--sl-color-bg);
   }
-  .mermaid-fallback-phase h4 {
-    margin: 8px 0 2px;
-    font-size: 15px;
-    color: var(--sl-color-text);
+  .journey-phase-1 .journey-phase-num { color: #6366f1; border-color: #6366f1; }
+  .journey-phase-2 .journey-phase-num { color: #0891b2; border-color: #0891b2; }
+  .journey-phase-3 .journey-phase-num { color: #16a34a; border-color: #16a34a; }
+  .journey-phase-4 .journey-phase-num { color: #d97706; border-color: #d97706; }
+
+  .journey-phase-title {
+    margin: 6px 0 2px;
+    font-size: 1.15rem;
+    font-weight: 700;
   }
-  .mermaid-fallback-tagline {
-    margin: 0 0 4px;
-    font-size: 13px;
+  .journey-phase-tag {
+    margin: 0;
+    font-size: 0.92rem;
     font-style: italic;
     color: var(--sl-color-text-muted);
   }
-  .mermaid-fallback ol { padding-left: 20px; }
-  .mermaid-fallback a.current {
+
+  .journey-stages {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .journey-stage {
+    flex: 1 1 220px;
+    min-width: 0;
+  }
+  .journey-stage-link {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-hairline);
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--sl-color-text);
+    transition: border-color 0.15s ease, transform 0.15s ease;
+    height: 100%;
+  }
+  .journey-stage-link:hover {
+    border-color: var(--sl-color-accent);
+    transform: translateY(-1px);
+  }
+  .journey-stage-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: var(--sl-color-bg-sidebar);
+    font-family: var(--font-mono, ui-monospace);
     font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--sl-color-text-muted);
+    flex: 0 0 auto;
+  }
+  .journey-stage-label {
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+  .journey-stage.current .journey-stage-link {
+    background: var(--sl-color-accent);
+    color: #fff;
+    border-color: var(--sl-color-accent);
+  }
+  .journey-stage.current .journey-stage-num {
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+  }
+  .journey-here {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--sl-color-accent);
   }
-  .mermaid-here {
-    color: var(--sl-color-accent);
-    font-weight: 600;
+  .journey-arrow {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    color: var(--sl-color-text-muted);
+    font-size: 1rem;
+    user-select: none;
+  }
+  @media (max-width: 36em) {
+    .journey-arrow { display: none; }
+    .journey-stages { gap: 6px; }
+  }
+
+  .journey-phase-arrow {
+    position: absolute;
+    left: 50%;
+    bottom: -18px;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 28px;
+    line-height: 28px;
+    text-align: center;
+    border-radius: 50%;
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-hairline);
+    color: var(--sl-color-text-muted);
+    font-weight: 700;
+    z-index: 2;
   }
 </style>
