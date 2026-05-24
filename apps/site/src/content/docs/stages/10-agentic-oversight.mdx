@@ -30,6 +30,26 @@ This stage explains the additional controls every agentic system needs, why prom
 
 <MermaidJourney currentStage={10} />
 
+## In plain English
+
+Imagine handing your credit card to a teenager and saying, "do the weekly shop — you decide what to buy." Best case, they come home with sensible groceries. Worst case, they spend the household budget on lottery tickets, or fill the trolley with crisps, or accidentally order ten kilos of flour instead of one. The card is gone before you can check the receipt. That's the leap from a normal AI to an *agentic* one.
+
+Most AI you've used so far **answers** — you ask it something, it replies, and you decide what to do with the reply. Agentic AI **acts**. You give it a goal — "book the meeting," "raise the support ticket," "refactor this file," "find a cheaper supplier" — and it goes off and uses other software to make things happen. That's enormously powerful. It's also riskier, because by the time you look, the email is already sent, the money is already spent, the code is already merged.
+
+Reviewing every answer one by one — which is how we govern chat assistants — doesn't scale here. The agent is making decisions faster than any human could read them. So you need a different kind of guardrail: limits on the *tools* the agent can reach, hard ceilings on what it can spend or do, "ask a human first" rules for the scary stuff, an undo path when something goes wrong, and a complete record of every action it took.
+
+Agentic oversight, in practice, looks like:
+
+- **A clear list of what the agent IS and ISN'T allowed to do** — written down, not just hinted at in instructions.
+- **Hard limits** — no more than £500 spent without a human check; no emails to people outside the company; no code merged without human review.
+- **A kill switch** that any operator can hit to stop everything, immediately.
+- **Logs of every action** so a human can later replay what the agent did, and why.
+- **A human reviewer** who actually reads a sample of those logs — not just on paper, in practice.
+
+The principle is simple: when an AI can act on its own, **the controls have to live in the plumbing**, not in polite instructions to the model. A clever prompt can be talked around. A rule baked into the runtime cannot.
+
+By the end of this page you'll know what additional controls every agentic system needs, why prompt-level rules aren't enough on their own, how to satisfy the EU AI Act's "stop button" obligation in real code, and how to spot the difference between an agent that's genuinely supervised and one that just looks supervised on paper.
+
 ## Why agentic systems need their own controls
 
 A predictive AI system has a single failure mode that matters operationally: it produces a wrong output, which a human then reads and either acts on or doesn't. The human is the safety buffer.

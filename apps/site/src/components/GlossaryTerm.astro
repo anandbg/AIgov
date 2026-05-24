@@ -1,6 +1,7 @@
 ---
 import { getEntry } from 'astro:content';
-import { glossaryUrl } from '@aigov/shared';
+import { glossaryUrl, withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
 
 interface Props {
   term: string;
@@ -22,7 +23,7 @@ const id = `tooltip-${resolvedSlug}`;
     >{term}</dfn>
     <span role="tooltip" id={id} class="glossary-tooltip">
       <span class="glossary-definition">{definition}</span>
-      <a class="glossary-open" href={glossaryUrl(resolvedSlug)}>Open glossary →</a>
+      <a class="glossary-open" href={withBase(BASE, glossaryUrl(resolvedSlug))}>Open glossary →</a>
     </span>
   </span>
 ) : (

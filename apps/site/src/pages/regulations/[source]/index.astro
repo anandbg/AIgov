@@ -1,0 +1,112 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection } from 'astro:content';
+import { snapshotUrl, withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+  const regs = (await getCollection('regulations')).filter((r) => !r.id.startsWith('_'));
+  return regs.map((reg) => ({
+    params: { source: reg.data.source },
+    props: { reg },
+  }));
+}
+
+const { reg } = Astro.props as { reg: any };
+const allSnapshots = await getCollection('snapshots');
+const snapshots = allSnapshots
+  .filter((s) => {
+    const src =
+      typeof s.data.source === 'string' ? s.data.source : (s.data.source as { id: string }).id;
+    return src === reg.data.source;
+  })
+  .sort((a, b) => (a.data.snapshotDate < b.data.snapshotDate ? 1 : -1));
+
+const jurisdictionLabels: Record<string, string> = {
+  eu: 'European Union',
+  uk: 'United Kingdom',
+  us: 'United States',
+  'us-state': 'US state-level',
+  global: 'Global',
+  apac: 'Asia-Pacific',
+};
+---
+<StarlightPage
+  frontmatter={{
+    title: reg.data.name,
+    description: reg.data.description,
+    tableOfContents: false,
+  }}
+>
+  <p class="reg-meta">
+    <strong>Jurisdiction:</strong> {jurisdictionLabels[reg.data.jurisdiction] ?? reg.data.jurisdiction} ·
+    <strong>Kind:</strong> {reg.data.kind} ·
+    <strong>First tracked:</strong> {reg.data.firstTrackedAt}
+  </p>
+
+  <p>{reg.data.description}</p>
+
+  <p>
+    <a href={reg.data.canonicalUrl} rel="external noopener" target="_blank">
+      Open the official source on {new URL(reg.data.canonicalUrl).hostname} ↗
+    </a>
+  </p>
+
+  <h2>Snapshots on this site</h2>
+
+  {snapshots.length === 0 ? (
+    <p>
+      No snapshots captured yet. Snapshot tracking lands in Phase 3 — until then,
+      use the official source link above.
+    </p>
+  ) : (
+    <ul class="snapshot-list">
+      {snapshots.map((s) => (
+        <li>
+          <a href={withBase(BASE, snapshotUrl(reg.data.source, s.data.snapshotDate))}>
+            <time datetime={s.data.snapshotDate}>{s.data.snapshotDate}</time>
+            {' — '}
+            {s.data.changeSummary}
+          </a>
+          {' '}<span class="snapshot-tag">{s.data.changeKind}</span>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  <hr />
+  <p><a href={withBase(BASE, '/whats-new/')}>← All recent changes (What's new)</a></p>
+</StarlightPage>
+
+<style>
+  .reg-meta {
+    font-size: 14px;
+    color: var(--sl-color-text-muted);
+    background: var(--sl-color-bg-sidebar);
+    padding: 12px 14px;
+    border-radius: 8px;
+  }
+  .snapshot-list {
+    list-style: none;
+    padding: 0;
+  }
+  .snapshot-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+  }
+  .snapshot-list time {
+    font-family: var(--font-mono, ui-monospace);
+    color: var(--sl-color-text-muted);
+    margin-right: 8px;
+  }
+  .snapshot-tag {
+    display: inline-block;
+    font-family: var(--font-mono, ui-monospace);
+    font-size: 12px;
+    color: var(--sl-color-text-muted);
+    background: var(--sl-color-bg-sidebar);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+</style>

@@ -1,13 +1,15 @@
 ---
 import { Icon } from 'astro-icon/components';
 import { sustainabilityMode, sustainabilityLastReviewedAt } from '~/config/site';
+import { withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
 ---
 {sustainabilityMode && (
   <div role="status" class="sustainability-notice">
     <Icon name="lucide:clock-alert" class="su-icon" />
     <div class="su-body">
       <strong>Maintained at low cadence.</strong>
-      <span>Last full review: <code>{sustainabilityLastReviewedAt}</code>. Why? See <a href="/about/#sustainability">About</a>.</span>
+      <span>Last full review: <code>{sustainabilityLastReviewedAt}</code>. Why? See <a href={withBase(BASE, '/about/#sustainability')}>About</a>.</span>
     </div>
   </div>
 )}

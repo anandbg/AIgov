@@ -30,6 +30,24 @@ This stage explains when risk check fires, what it actually examines, and how to
 
 <MermaidJourney currentStage={3} />
 
+## In plain English
+
+Think about an MOT. Your car passed its safety check last year, but nobody pretends that one inspection covers it for life. The tyres wear down, a new sensor gets fitted, the roads change, the rules change. Once a year — and any time something major happens — you put it back on the ramp and look again. **Risk Check** is the same idea for an AI system.
+
+Stage 2 (risk tiering) was the *first* label: it decided whether a system was high-risk, limited-risk, or minimal-risk based on what it did at the time. Risk Check is the *repeating health check* that asks a simpler question — "is that label still right today?" The world doesn't stand still, and neither does the system, so the answer has to be revisited on a schedule and any time something material shifts.
+
+A risk check gets triggered when something genuinely changes. Three common buckets:
+
+- **The AI system itself changed** — it was retrained on new data, a new feature shipped, the underlying model was swapped, or a new tool was added to what it can do.
+- **The people using it changed** — a new customer group, a new country, a new internal team picked it up for a use case nobody anticipated.
+- **The world around it changed** — a new law passed, a regulator issued guidance, a competitor had a public incident, or a press story shifted the political weather.
+
+When any of those happen — or when the calendar simply says it's time — you rerun the same evaluations you ran at launch, look at what's drifted, and decide whether the original tier still fits. Sometimes the answer is "yes, carry on." Sometimes it's "this is now high-risk and we need stricter controls." Either way, the decision is written down, dated, and signed, so a year from now nobody has to guess what you knew and when.
+
+That's the whole discipline: never trust a launch-day classification forever, and never let drift go undetected long enough to turn into an incident.
+
+By the end of this page you'll know when a risk check fires, what it actually examines, who signs it off, and how to wire it into your engineering pipeline so it's automatic rather than something a tired person remembers to do.
+
 ## Why classifications drift
 
 Five forces push a system out of its declared tier between formal reviews:

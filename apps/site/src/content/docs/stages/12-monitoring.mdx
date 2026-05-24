@@ -30,6 +30,25 @@ This stage explains the four families of signals every AI system needs to emit, 
 
 <MermaidJourney currentStage={12} />
 
+## In plain English
+
+Imagine the vital signs on a hospital patient. You don't take the blood pressure once at admission, write it on the chart, and call it good — you keep the monitor beeping at the bedside, watching pulse and oxygen and temperature, because what matters is whether the patient is still doing well *right now*. Monitoring an AI system works the same way. Building it and launching it is the start of the relationship, not the end.
+
+Here's the thing nobody tells you when the launch party finishes: AI quietly degrades. The world changes — new slang, new fraud tactics, new customer expectations. The data flowing in starts to look different from the data the model was trained on. Users find creative new ways to use (and misuse) the system. Costs creep up because one chatty customer is hammering the API ten thousand times a day. None of this announces itself. It seeps in. Monitoring is how you spot it early — before a regulator calls, before a customer complaint goes viral, before a quiet bias turns into a headline.
+
+And monitoring is what closes the loop on this whole journey. Anything monitoring discovers — drift, an unfair pattern, a near-miss incident, a new misuse — feeds back into the earlier stages. It can trigger a fresh risk check, a re-tiering, new tests, updated documentation, sometimes a brand-new policy clause. The 12 stages aren't a straight line you finish; they're a loop you keep running.
+
+The kinds of signals AI monitoring actually watches:
+
+- **Performance drift** — is the model still as accurate as it was on day one, or is it quietly slipping?
+- **Fairness drift** — is it suddenly treating one group of users worse than another?
+- **Data drift** — is the input data starting to look different from what we trained on?
+- **Abuse and misuse signals** — are users prompt-injecting, jailbreaking, scraping, or stress-testing the guardrails?
+- **Cost and load** — is one customer using ten thousand times more than the average, or are token bills creeping up week on week?
+- **Safety triggers** — has any output hit a hard "don't ever do this" rule that needs a human to look at it?
+
+By the end of this page you'll know the four families of signals every AI system should emit, how to wire them into a dashboard that people will actually read, and how to satisfy the EU AI Act's post-market monitoring obligation without inventing a parallel reporting pipeline. This is the last stage of the journey — but the work loops back to [Stage 1: AI Policy](/stages/01-ai-policy/), because what monitoring finds in the wild is often exactly what your policy needs to say next.
+
 ## The four signal families
 
 Every production AI system needs to emit signals across four families. Coverage is the test — a system that only monitors latency and error rate is monitoring its infrastructure, not its AI behaviour.

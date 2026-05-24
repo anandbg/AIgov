@@ -1,0 +1,154 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, render, getEntry } from 'astro:content';
+import { articleAnchor, regulationUrl, withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+  const snapshots = (await getCollection('snapshots')).filter((s) => !s.id.includes('_'));
+  return snapshots.map((snapshot) => {
+    const sourceSlug =
+      typeof snapshot.data.source === 'string'
+        ? snapshot.data.source
+        : (snapshot.data.source as { id: string }).id;
+    return {
+      params: { source: sourceSlug, date: snapshot.data.snapshotDate },
+      props: { snapshot },
+    };
+  });
+}
+
+const { snapshot } = Astro.props as { snapshot: any };
+const { source, date } = Astro.params as { source: string; date: string };
+const reg = await getEntry('regulations', source);
+const { Content } = await render(snapshot);
+
+// Collect every article cited anywhere on the site for this (source, date).
+// Each becomes an anchored heading on this page so RegQuote's
+// /regulations/{source}/{date}/#article-anchor fragments resolve.
+const allStages = await getCollection('docs');
+const citedArticles = new Set<string>();
+for (const article of snapshot.data.relatedArticles ?? []) citedArticles.add(article);
+for (const stage of allStages) {
+  for (const reg of stage.data.regulations ?? []) {
+    const regSource =
+      typeof reg.source === 'string' ? reg.source : (reg.source as { id: string }).id;
+    if (regSource === source) {
+      for (const a of reg.articles ?? []) citedArticles.add(a);
+    }
+  }
+}
+const articles = Array.from(citedArticles).sort();
+const regName = reg?.data.name ?? source;
+const canonicalUrl = reg?.data.canonicalUrl;
+---
+<StarlightPage
+  frontmatter={{
+    title: `${regName} — snapshot ${date}`,
+    description: snapshot.data.changeSummary,
+    tableOfContents: false,
+  }}
+>
+  <p class="snapshot-meta">
+    <strong>Source:</strong> <a href={withBase(BASE, regulationUrl(source))}>{regName}</a> ·
+    <strong>Snapshot date:</strong> {date} ·
+    <strong>Change kind:</strong> {snapshot.data.changeKind} ·
+    <strong>Material change:</strong> {snapshot.data.materialChange ? 'yes' : 'no'}
+  </p>
+
+  <p>
+    <strong>What you'll find here:</strong> the snapshot text captured on {date},
+    plus anchored sections for every article this site cites from this source.
+    Each anchored heading is the target of a <em>View source →</em> link from a
+    stage explainer.
+  </p>
+
+  <p><strong>Change summary:</strong> {snapshot.data.changeSummary}</p>
+
+  {canonicalUrl && (
+    <p>
+      <a href={canonicalUrl} rel="external noopener" target="_blank">
+        Open the official source on {new URL(canonicalUrl).hostname} ↗
+      </a>
+    </p>
+  )}
+
+  <hr />
+
+  <section class="snapshot-body">
+    <Content />
+  </section>
+
+  {articles.length > 0 && (
+    <>
+      <hr />
+      <h2 id="cited-articles">Cited articles</h2>
+      <p>
+        These are the articles, clauses, or sections of {regName} that this
+        site links to from its stage explainers. Each one has a stable anchor
+        you can deep-link to.
+      </p>
+      <dl class="cited-articles">
+        {articles.map((article) => {
+          const anchor = articleAnchor(article).slice(1);
+          return (
+            <>
+              <dt id={anchor}>{article}</dt>
+              <dd>
+                Tracking metadata only — the substantive text is on the
+                official source.
+                {canonicalUrl && (
+                  <>
+                    {' '}
+                    <a href={canonicalUrl} rel="external noopener" target="_blank">
+                      Open {regName} ↗
+                    </a>
+                  </>
+                )}
+              </dd>
+            </>
+          );
+        })}
+      </dl>
+    </>
+  )}
+
+  <hr />
+  <p>
+    <a href={withBase(BASE, '/whats-new/')}>← Back to What's new</a> ·
+    <a href={withBase(BASE, regulationUrl(source))}>← Back to {regName}</a>
+  </p>
+</StarlightPage>
+
+<style>
+  .snapshot-meta {
+    font-size: 14px;
+    color: var(--sl-color-text-muted);
+    background: var(--sl-color-bg-sidebar);
+    padding: 12px 14px;
+    border-radius: 8px;
+  }
+  .snapshot-body :global(h1) {
+    font-size: 1.3rem;
+    margin-top: 1.4rem;
+  }
+  .snapshot-body :global(h2) {
+    font-size: 1.15rem;
+  }
+  .cited-articles {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin-top: 12px;
+  }
+  .cited-articles dt {
+    font-family: var(--font-mono, ui-monospace);
+    font-weight: 700;
+    scroll-margin-top: 80px;
+  }
+  .cited-articles dd {
+    margin: 0;
+    color: var(--sl-color-text-muted);
+    font-size: 14px;
+  }
+</style>

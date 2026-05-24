@@ -30,6 +30,25 @@ This stage explains the severity scheme, the shape of a usable runbook, the EU A
 
 <MermaidJourney currentStage={11} />
 
+## In plain English
+
+Think of a busy restaurant kitchen. A chef slices their hand open in the middle of service. Nobody starts arguing about whose fault it was — there's a sequence everyone already knows. First aid kit out. Wound covered. Station handed off. The incident written in the logbook. The manager told. A decision made about whether any customer's food was affected and needs to be remade. And later, once the rush is over, a quiet conversation about why the knife slipped and whether the cutting board needs replacing.
+
+Incident response for AI is the same idea. When the AI fails — and at some point it will; it might leak data, make a discriminatory decision, get jailbroken into giving terrible advice, hallucinate something costly, or quietly run up a huge bill — you don't want the company arguing about whose job it is to act. You want a clear, written playbook that everyone has practised, so the response feels like muscle memory instead of panic.
+
+Deadlines matter here in a way they don't in most other parts of governance. Some laws — the EU AI Act, GDPR — give you a fixed number of hours or days to tell the regulator after you realise what's happened. You do not have time to invent the process during the incident. The runbook has to exist before the phone rings.
+
+Every good AI incident response plan covers the same six steps:
+
+- **Detect** — how do we even notice something is wrong? (Alerts, user reports, a quiet engineer raising a hand.)
+- **Contain** — pause or limit the system so the harm stops getting worse.
+- **Assess** — who is affected, and how badly? Is this one customer or ten thousand?
+- **Notify** — tell users, regulators, partners, the public, on whatever deadlines the law sets.
+- **Fix** — undo the harm where possible, and repair the underlying problem so it can't happen the same way again.
+- **Learn** — a written post-mortem that genuinely changes how we work, not a document filed and forgotten.
+
+By the end of this page you'll know what a usable AI incident runbook actually looks like, how severity is classified, which regulatory clocks start ticking the moment you spot a problem (and when they're measured in hours rather than days), and how to run a quarterly tabletop exercise so you find the broken bits of your runbook before a real incident does.
+
 ## The five phases of incident response
 
 A complete runbook covers five phases. Each phase has a named role and a stated time target.

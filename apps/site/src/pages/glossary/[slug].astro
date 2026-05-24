@@ -1,0 +1,88 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, render } from 'astro:content';
+import { glossaryUrl, stageUrl, regulationUrl, vendorUrl, withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+  const terms = (await getCollection('glossary')).filter((g) => !g.id.startsWith('_'));
+  return terms.map((term) => ({
+    params: { slug: term.data.slug },
+    props: { term },
+  }));
+}
+
+const { term } = Astro.props as { term: any };
+const { Content } = await render(term);
+
+const allTerms = (await getCollection('glossary')).filter((g) => !g.id.startsWith('_'));
+const bySlug = new Map(allTerms.map((t) => [t.data.slug, t.data.term]));
+
+const related: Array<{ slug: string; term: string }> = (term.data.related ?? [])
+  .map((slug: string) => ({ slug, term: bySlug.get(slug) ?? slug }))
+  .filter((r: { term: string }) => Boolean(r.term));
+
+const seeAlsoLinks = (term.data.seeAlso ?? []).map((sa: { kind: string; slug: string }) => {
+  if (sa.kind === 'stage') return { label: `Stage: ${sa.slug}`, href: withBase(BASE, stageUrl(sa.slug)) };
+  if (sa.kind === 'regulation') return { label: `Regulation: ${sa.slug}`, href: withBase(BASE, regulationUrl(sa.slug)) };
+  if (sa.kind === 'vendor') return { label: `Vendor: ${sa.slug}`, href: withBase(BASE, vendorUrl(sa.slug)) };
+  return { label: sa.slug, href: '#' };
+});
+---
+<StarlightPage
+  frontmatter={{
+    title: term.data.term,
+    description: term.data.definition,
+    tableOfContents: false,
+  }}
+>
+  {term.data.aliases?.length > 0 && (
+    <p class="aliases">
+      <strong>Also known as:</strong> {term.data.aliases.join(', ')}
+    </p>
+  )}
+
+  <p class="definition">{term.data.definition}</p>
+
+  <Content />
+
+  {related.length > 0 && (
+    <>
+      <h2>Related terms</h2>
+      <ul>
+        {related.map((r) => (
+          <li><a href={withBase(BASE, glossaryUrl(r.slug))}>{r.term}</a></li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  {seeAlsoLinks.length > 0 && (
+    <>
+      <h2>See also</h2>
+      <ul>
+        {seeAlsoLinks.map((l: { label: string; href: string }) => (
+          <li><a href={l.href}>{l.label}</a></li>
+        ))}
+      </ul>
+    </>
+  )}
+
+  <hr />
+  <p><a href={withBase(BASE, '/glossary/')}>← All glossary terms</a></p>
+</StarlightPage>
+
+<style>
+  .aliases {
+    font-size: 14px;
+    color: var(--sl-color-text-muted);
+  }
+  .definition {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    background: var(--sl-color-bg-sidebar);
+    padding: 14px 16px;
+    border-radius: 8px;
+    border-left: 3px solid var(--sl-color-accent);
+  }
+</style>

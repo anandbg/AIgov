@@ -1,0 +1,87 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { getCollection, render } from 'astro:content';
+import { withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
+
+export async function getStaticPaths() {
+  const stories = (await getCollection('stories')).filter((s) => !s.id.startsWith('_'));
+  return stories.map((story) => ({
+    params: { slug: story.data.slug },
+    props: { story },
+  }));
+}
+
+const { story } = Astro.props as { story: any };
+const { Content } = await render(story);
+
+const jurisdictionLabels: Record<string, string> = {
+  eu: 'European Union',
+  uk: 'United Kingdom',
+  us: 'United States',
+  'us-state': 'US state',
+  apac: 'Asia-Pacific',
+  global: 'Global',
+};
+---
+<StarlightPage
+  frontmatter={{
+    title: story.data.company,
+    description: story.data.description,
+    tableOfContents: false,
+  }}
+>
+  <p class="story-meta">
+    <strong>Fictional company.</strong> Used as a recurring case-study across the
+    12-stage journey — any resemblance to a real organisation is unintended.
+  </p>
+
+  <dl class="story-facts">
+    <dt>Jurisdiction</dt>
+    <dd>{jurisdictionLabels[story.data.jurisdiction] ?? story.data.jurisdiction}</dd>
+    <dt>Industry</dt>
+    <dd>{story.data.industry}</dd>
+    <dt>Protagonist</dt>
+    <dd>{story.data.protagonist.name} — {story.data.protagonist.role}</dd>
+    {story.data.useCases?.length > 0 && (
+      <>
+        <dt>Use-cases</dt>
+        <dd>
+          <ul class="use-case-list">
+            {story.data.useCases.map((u: string) => <li>{u}</li>)}
+          </ul>
+        </dd>
+      </>
+    )}
+  </dl>
+
+  <hr />
+
+  <Content />
+
+  <hr />
+  <p><a href={withBase(BASE, '/')}>← Back to the 12-stage journey</a></p>
+</StarlightPage>
+
+<style>
+  .story-meta {
+    font-size: 13px;
+    color: var(--sl-color-text-muted);
+    background: var(--sl-color-bg-sidebar);
+    padding: 10px 12px;
+    border-radius: 6px;
+    border-left: 3px solid var(--sl-color-accent);
+  }
+  .story-facts {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 16px;
+    margin: 16px 0;
+  }
+  .story-facts dt {
+    font-weight: 600;
+    color: var(--sl-color-text-muted);
+  }
+  .story-facts dd { margin: 0; }
+  .use-case-list { margin: 0; padding-left: 18px; }
+</style>

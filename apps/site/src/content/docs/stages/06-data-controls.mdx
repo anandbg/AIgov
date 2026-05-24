@@ -31,6 +31,23 @@ This stage explains the five data controls that any AI system needs, the DPIA st
 
 <MermaidJourney currentStage={6} />
 
+## In plain English
+
+Imagine you're cooking a meal for a dinner party. The dish can only be as good as the ingredients you put in — and if someone at the table has a nut allergy, you'd better know whether the pesto came from a jar that was processed in a factory with peanuts. You need to know where every ingredient came from, what's actually in it, and who might react to it. The food itself is only half the story; the provenance is the other half.
+
+AI is the same. An AI system is mostly data underneath — the data that trained the model, the data the system reads at runtime (prompts, retrieved documents, user inputs), and the data the AI produces and stores (outputs, logs, embeddings). If you don't know where your data came from, whether you had permission to use it, who can see the outputs, or how long you'll keep it — then the clever model sitting on top is built on sand.
+
+Privacy law takes this seriously. GDPR (the UK and EU privacy rules) treats data inside an AI system exactly the same as any other personal data. You need a real, written reason to use it — what the law calls a "lawful basis." You need to delete it when you're supposed to. And if someone walks up and asks "what did you do with my information?" you need to be able to give them a straight answer.
+
+Practically, there are **four questions you must be able to answer about any data your AI touches**:
+
+- **Where did it come from?** Origin, ownership, and whether anyone gave you permission to use it.
+- **What's in it?** Is there personal data, special-category data (health, beliefs, biometrics), or copyright material in there?
+- **Who can see it?** Access controls and logs — both for the raw data and for the AI outputs derived from it.
+- **How long do we keep it?** Retention schedules, deletion triggers, and how you'll honour the right to be forgotten.
+
+By the end of this page you'll know the five data controls every AI system needs, what a Data Protection Impact Assessment (DPIA) actually contains, why lineage has to start at the ingestion pipeline and not the model trainer, and why retrofitting data controls after launch is dramatically more expensive than building them in from day one.
+
 ## The five data controls
 
 ### 1. Lineage

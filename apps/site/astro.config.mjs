@@ -4,12 +4,34 @@ import mdx from '@astrojs/mdx';
 import tailwindcss from '@tailwindcss/vite';
 import mermaid from 'astro-mermaid';
 import icon from 'astro-icon';
+import { visit } from 'unist-util-visit';
+
+const BASE_PATH = '/AIgov';
+
+// Rewrite absolute internal links (e.g. /stages/01-ai-policy/) inside Markdown/MDX
+// content so the deployed project page (anandbg.github.io/AIgov/...) resolves them
+// correctly. Astro does NOT auto-prefix base into Markdown link nodes, only its own
+// chrome — this plugin closes that gap.
+function remarkBasePrefix() {
+  return (tree) => {
+    visit(tree, 'link', (node) => {
+      if (typeof node.url !== 'string') return;
+      if (!node.url.startsWith('/')) return;
+      if (node.url.startsWith('//')) return;
+      if (node.url.startsWith(`${BASE_PATH}/`) || node.url === BASE_PATH) return;
+      node.url = `${BASE_PATH}${node.url}`;
+    });
+  };
+}
 
 export default defineConfig({
-  site: 'https://SITE_DOMAIN',
+  // Project-page deploy: lives at https://anandbg.github.io/AIgov/
+  site: 'https://anandbg.github.io',
+  base: BASE_PATH,
   output: 'static',
   trailingSlash: 'always',
   build: { format: 'directory' },
+  markdown: { remarkPlugins: [remarkBasePrefix] },
   vite: { plugins: [tailwindcss()] },
   integrations: [
     mermaid({ theme: 'neutral', autoTheme: true }),
@@ -32,7 +54,7 @@ export default defineConfig({
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
       lastUpdated: false,
       editLink: {
-        baseUrl: 'https://github.com/PLACEHOLDER_ORG/AIgov/edit/main/apps/site/',
+        baseUrl: 'https://github.com/anandbg/AIgov/edit/main/apps/site/',
       },
       favicon: '/favicon.svg',
       sidebar: [

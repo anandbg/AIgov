@@ -2,7 +2,8 @@
 /* Per Pitfall 6: this is the ONLY way to embed quoted regulation text.
    Free-text quotes are forbidden in merged content. CI gates enforce
    this in Phase 2 (CNT-06). */
-import { snapshotUrl, articleAnchor } from '@aigov/shared';
+import { snapshotUrl, articleAnchor, withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
 
 interface Props {
   source: string;
@@ -11,7 +12,7 @@ interface Props {
   regulationName?: string;
 }
 const { source, article, snapshot, regulationName } = Astro.props as Props;
-const href = snapshotUrl(source, snapshot) + articleAnchor(article);
+const href = withBase(BASE, snapshotUrl(source, snapshot)) + articleAnchor(article);
 const headerLabel = `${regulationName ?? source} · ${article} · snapshot ${snapshot}`;
 ---
 <blockquote class="reg-quote" cite={href}>

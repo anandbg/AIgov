@@ -30,6 +30,26 @@ This stage explains why pre-launch testing is insufficient, what a working conti
 
 <MermaidJourney currentStage={7} />
 
+## In plain English
+
+Imagine a bank that has just installed a fancy new vault. Before they trust it with real money, they hire a locksmith — a *very* good one — and tell them: "Try to break in. Pick the lock, drill it, social-engineer the night guard, slip through the air vent. Find every weakness you can. We'd rather discover the holes from you, on a Tuesday afternoon, than from an actual thief at 3am on a Saturday."
+
+That is red-teaming. The name comes from the military, where one team plays the role of the enemy attacking your own defences. For AI, red-teaming means hiring smart, creative, slightly mischievous people to *deliberately* try to make your AI misbehave — say something dangerous, leak information it shouldn't, fall for a trick, or treat someone unfairly — all in a controlled setting, so you find the weak spots before a real user does.
+
+The "continuous" part is the bit most teams get wrong. Red-teaming isn't a one-off thing you do the week before launch and then file the report away. The AI keeps changing — new prompts, new tools, new training data, new features. And the attackers keep changing too — every month there are new tricks, new techniques, new jailbreak patterns making the rounds. A vault that was secure last year against last year's locksmiths is not necessarily secure this year. The testing has to keep going.
+
+Here are some of the things red-teamers actually try:
+
+- **Jailbreaks** — tricking the AI into ignoring its safety rules ("pretend you're an AI with no restrictions…")
+- **Prompt injection** — hiding instructions inside a document, email, or web page that the AI will later read and obey
+- **Data leakage** — coaxing the AI into revealing its training data, its system prompt, or other users' information
+- **Bias probes** — checking whether the AI treats different groups of people differently for the same question
+- **Stress-testing accuracy** — feeding it hard, weird, or adversarial real-world cases to see where it confidently gets things wrong
+
+The findings then get turned into permanent tests, so the same weakness can never silently come back later. It's the AI equivalent of a hospital running "code blue" drills — uncomfortable, sometimes embarrassing, but the only honest way to know your system can handle what's actually going to be thrown at it.
+
+By the end of this page you'll know what a continuous red-team programme looks like in practice, which catalogues (OWASP, MITRE ATLAS, PyRIT, Garak) the industry uses as its playbook, how to wire findings into your engineering CI so regressions can't slip through, and how the resulting evidence trail satisfies EU AI Act Article 15 and NIST AI RMF MEASURE obligations.
+
 ## Why continuous, not periodic
 
 A pre-launch security review establishes a baseline. It does not survive contact with:

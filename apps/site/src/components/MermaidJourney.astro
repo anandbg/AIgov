@@ -1,32 +1,96 @@
 ---
+import { withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
+
 interface Props {
   currentStage?: number;
 }
 const { currentStage } = Astro.props as Props;
 const wrapperClass = ['mermaid-journey', currentStage ? `current-S${currentStage}` : ''].filter(Boolean).join(' ');
 
-const stages: Array<{ label: string; slug: string; id: string }> = [
-  { id: 'S1',  label: '1. AI Policy',              slug: '01-ai-policy' },
-  { id: 'S2',  label: '2. Risk Tiering',           slug: '02-risk-tiering' },
-  { id: 'S3',  label: '3. Risk Check',             slug: '03-risk-check' },
-  { id: 'S4',  label: '4. Compliance',             slug: '04-compliance' },
-  { id: 'S5',  label: '5. Third-party AI Risk',    slug: '05-third-party-risk' },
-  { id: 'S6',  label: '6. Data Controls',          slug: '06-data-controls' },
-  { id: 'S7',  label: '7. Continuous Red-teaming', slug: '07-red-teaming' },
-  { id: 'S8',  label: '8. Documentation',          slug: '08-documentation' },
-  { id: 'S9',  label: '9. Accountability',         slug: '09-accountability' },
-  { id: 'S10', label: '10. Agentic AI Oversight',  slug: '10-agentic-oversight' },
-  { id: 'S11', label: '11. Incident Response',     slug: '11-incident-response' },
-  { id: 'S12', label: '12. Monitoring',            slug: '12-monitoring' },
+type Stage = { id: string; label: string; slug: string; phase: number };
+type Phase = { num: number; title: string; tagline: string; stages: Stage[] };
+
+const phases: Phase[] = [
+  {
+    num: 1,
+    title: 'Set the rules',
+    tagline: 'Decide what your company will — and won’t — do with AI.',
+    stages: [
+      { id: 'S1', label: '1. AI Policy',    slug: '01-ai-policy',    phase: 1 },
+      { id: 'S2', label: '2. Risk Tiering', slug: '02-risk-tiering', phase: 1 },
+      { id: 'S3', label: '3. Risk Check',   slug: '03-risk-check',   phase: 1 },
+    ],
+  },
+  {
+    num: 2,
+    title: 'Make it legal & safe',
+    tagline: 'Meet the laws, vet your suppliers, protect your data.',
+    stages: [
+      { id: 'S4', label: '4. Compliance',          slug: '04-compliance',       phase: 2 },
+      { id: 'S5', label: '5. Third-party AI Risk', slug: '05-third-party-risk', phase: 2 },
+      { id: 'S6', label: '6. Data Controls',       slug: '06-data-controls',    phase: 2 },
+    ],
+  },
+  {
+    num: 3,
+    title: 'Prove it works',
+    tagline: 'Stress-test the system, write down what you did, name who’s on the hook.',
+    stages: [
+      { id: 'S7', label: '7. Red-teaming',    slug: '07-red-teaming',    phase: 3 },
+      { id: 'S8', label: '8. Documentation',  slug: '08-documentation',  phase: 3 },
+      { id: 'S9', label: '9. Accountability', slug: '09-accountability', phase: 3 },
+    ],
+  },
+  {
+    num: 4,
+    title: 'Run and watch',
+    tagline: 'Supervise live AI, handle incidents, keep an eye on it forever.',
+    stages: [
+      { id: 'S10', label: '10. Agentic Oversight',  slug: '10-agentic-oversight', phase: 4 },
+      { id: 'S11', label: '11. Incident Response',  slug: '11-incident-response', phase: 4 },
+      { id: 'S12', label: '12. Monitoring',         slug: '12-monitoring',        phase: 4 },
+    ],
+  },
 ];
 
+const stages: Stage[] = phases.flatMap((p) => p.stages);
+const currentPhase = currentStage ? phases.find((p) => p.stages.some((s) => parseInt(s.id.slice(1), 10) === currentStage))?.num : undefined;
+
+// Multi-row layout: 4 rows of 3 stages, grouped by phase. Renders compact and
+// readable instead of a 12-node horizontal sliver. Each phase subgraph flows
+// left-to-right; phases connect top-to-bottom so the whole journey reads like
+// a board game laid out on a page rather than a single squashed line.
+const phaseLines = phases.flatMap((p) => {
+  const arrow = p.stages.map((s) => `${s.id}[${s.label}]`).join(' --> ');
+  return [
+    `  subgraph P${p.num} ["Phase ${p.num} · ${p.title}"]`,
+    `    direction LR`,
+    `    ${arrow}`,
+    `  end`,
+  ];
+});
+
+const phaseLinks: string[] = [];
+for (let i = 0; i < phases.length - 1; i++) {
+  const last = phases[i].stages[phases[i].stages.length - 1].id;
+  const first = phases[i + 1].stages[0].id;
+  phaseLinks.push(`  ${last} --> ${first}`);
+}
+
+const styleLines: string[] = [];
+if (currentStage) {
+  styleLines.push(`  style S${currentStage} fill:#4f46e5,stroke:#312e81,stroke-width:2px,color:#ffffff`);
+}
+if (currentPhase) {
+  styleLines.push(`  style P${currentPhase} fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px`);
+}
+
 const diagram = [
-  'flowchart LR',
-  '  S1[1. AI Policy] --> S2[2. Risk Tiering] --> S3[3. Risk Check] --> S4[4. Compliance]',
-  '  S4 --> S5[5. Third-party AI Risk] --> S6[6. Data Controls] --> S7[7. Continuous Red-teaming]',
-  '  S7 --> S8[8. Documentation] --> S9[9. Accountability] --> S10[10. Agentic AI Oversight]',
-  '  S10 --> S11[11. Incident Response] --> S12[12. Monitoring]',
-  ...(currentStage ? [`  style S${currentStage} fill:#4f46e5,stroke:#312e81,color:#ffffff`] : []),
+  'flowchart TB',
+  ...phaseLines,
+  ...phaseLinks,
+  ...styleLines,
 ].join('\n');
 ---
 <div class={wrapperClass}>
@@ -34,14 +98,24 @@ const diagram = [
 
   <details class="mermaid-fallback">
     <summary>List view of the 12-stage journey</summary>
-    <ol>
-      {stages.map((s) => (
-        <li>
-          <a href={`/stages/${s.slug}/`} class={currentStage === parseInt(s.id.slice(1), 10) ? 'current' : ''}>{s.label}</a>
-          {currentStage === parseInt(s.id.slice(1), 10) && <span class="mermaid-here"> ← you are here</span>}
-        </li>
-      ))}
-    </ol>
+    {phases.map((p) => (
+      <section class="mermaid-fallback-phase">
+        <h4>Phase {p.num} · {p.title}</h4>
+        <p class="mermaid-fallback-tagline">{p.tagline}</p>
+        <ol>
+          {p.stages.map((s) => {
+            const n = parseInt(s.id.slice(1), 10);
+            const isHere = currentStage === n;
+            return (
+              <li>
+                <a href={withBase(BASE, `/stages/${s.slug}/`)} class={isHere ? 'current' : ''}>{s.label}</a>
+                {isHere && <span class="mermaid-here"> ← you are here</span>}
+              </li>
+            );
+          })}
+        </ol>
+      </section>
+    ))}
   </details>
 </div>
 
@@ -101,13 +175,27 @@ const diagram = [
 </script>
 
 <style>
+  .mermaid-journey {
+    container-type: inline-size;
+  }
   .mermaid-journey :global(.mermaid) {
-    margin: 16px 0;
+    margin: 16px auto;
     text-align: center;
+    /* Give the multi-row diagram more vertical room so node text stays readable. */
+    min-height: 320px;
   }
   .mermaid-journey :global(.mermaid svg) {
     max-width: 100%;
     height: auto;
+    /* The diagram now has 4 rows; ensure phase labels stay legible. */
+    font-size: 14px;
+  }
+  .mermaid-journey :global(.mermaid .cluster rect) {
+    rx: 10px;
+    ry: 10px;
+  }
+  .mermaid-journey :global(.mermaid .cluster-label) {
+    font-weight: 600;
   }
   pre.mermaid[data-mermaid-source] {
     font-family: var(--font-mono, ui-monospace);
@@ -122,6 +210,20 @@ const diagram = [
   .mermaid-fallback {
     margin-top: 12px;
     font-size: 14px;
+    color: var(--sl-color-text-muted);
+  }
+  .mermaid-fallback-phase {
+    margin-top: 12px;
+  }
+  .mermaid-fallback-phase h4 {
+    margin: 8px 0 2px;
+    font-size: 15px;
+    color: var(--sl-color-text);
+  }
+  .mermaid-fallback-tagline {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-style: italic;
     color: var(--sl-color-text-muted);
   }
   .mermaid-fallback ol { padding-left: 20px; }

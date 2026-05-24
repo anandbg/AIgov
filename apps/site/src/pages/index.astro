@@ -3,15 +3,19 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 ---
 <StarlightPage frontmatter={{ title: 'AI Governance — plain language, current weekly', template: 'splash', tableOfContents: false }}>
-  <p>This site explains AI governance in plain language and tracks the world's authoritative regulations and vendor frameworks. The 12-stage journey below maps the work of taking an organisation from "we use AI" to "we govern AI."</p>
+  <p><strong>AI governance</strong> is the set of decisions and habits that keep a company in control of the AI it uses — instead of the other way around. It is what the board, the regulator, the customer, and the curious new hire all want to understand the moment they hear "we're using AI."</p>
+
+  <p>This site is the plain-language version. No jargon, no legal Latin, no pretending you should have already read 500 pages of legislation. Just twelve clear steps, in everyday words, that take you from <em>"we use AI"</em> to <em>"we govern AI"</em> — with the actual laws, standards, and real-world examples linked alongside.</p>
+
+  <p>Read the map below like a journey: four phases, twelve stages. Each box is a click — and every page is written for someone who has never done this before.</p>
 
   <MermaidJourney />
 
-  <p>Each stage links to a standalone explainer with three persona lenses — executive, engineer, compliance — and a recurring cast of fictional companies from different jurisdictions threading scenarios through the narrative.</p>
+  <p>Every stage page opens with an <strong>"In plain English"</strong> section that explains the topic the way you'd explain it to a friend over coffee. Below that, you'll find three lenses — <strong>executive</strong>, <strong>engineer</strong>, and <strong>compliance</strong> — so each reader can jump to the bit that speaks to them. A recurring cast of fictional companies (a Berlin hospital, a London insurer, a Tokyo logistics firm, a US robotics maker) threads real scenarios through the narrative, so the concepts always come back to something you can picture.</p>
 
-  <p><strong>Status:</strong> Phase 2 — Content Spine. The 12-stage narrative is shipped; the live tracking pipeline lands in Phase 3.</p>
+  <p><strong>Where we are:</strong> Phase 2 — Content Spine. All twelve stage explainers are live. The weekly "what changed in the world of AI regulation" tracker lands in Phase 3.</p>
 
   <hr />
 
-  <p><small>This site explains AI governance. It is not legal advice. Consult qualified counsel before acting on any content.</small></p>
+  <p><small>This site explains AI governance in plain language. It is <strong>not legal advice</strong>. Talk to a qualified lawyer before acting on anything you read here.</small></p>
 </StarlightPage>

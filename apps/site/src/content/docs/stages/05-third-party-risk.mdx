@@ -33,6 +33,26 @@ This stage covers the provider/deployer boundary that most organisations get wro
 
 <MermaidJourney currentStage={5} />
 
+## In plain English
+
+Imagine you run a restaurant. You don't grow the lettuce, you don't raise the chickens, and you certainly don't mill the flour — you order all of it from suppliers. But when a customer bites into a bad meal, they don't phone the lettuce farm. They send the plate back to *you*. Your name is over the door, so the responsibility for what lands on the table is yours, no matter who grew which ingredient.
+
+Third-party AI risk is exactly that, for software. Most companies don't actually build their own AI. The underlying model usually comes from someone like OpenAI, Anthropic, or Google. The chat interface might come from a separate vendor. The analytics dashboard that quietly summarises customer complaints with a large language model is from a third. You stitch the pieces together — and the moment an AI-driven decision affects a customer, regulator, or employee, you are the one on the hook. Not the supplier. You.
+
+And here's the uncomfortable bit: "the vendor told us to trust them" is not a defence. Not in court, not in front of a regulator, and not in front of a customer who's lost money or had a decision go against them. You need actual evidence of what's inside the box you bought.
+
+Here's what you genuinely need to know about every AI vendor you use:
+
+- **What model is inside** — including the specific version, not just "GPT" or "Claude."
+- **Where it was trained, and on what kind of data** (broadly — you won't get every detail, but you should know the shape).
+- **What the vendor's own safety commitments are** — what they test for, what they won't do.
+- **What happens if they change the model under you** — without warning, mid-contract, in a way that changes how it behaves.
+- **What to do if it goes wrong** — your contract, your insurance, your incident plan, in that order.
+
+The friendly recap: you can buy your AI from whomever you like, but you cannot buy your way out of being responsible for it. The customer sees one brand — yours. The regulator looks at one organisation — yours. So the governance has to sit with you, even when the technology doesn't.
+
+By the end of this page you'll know how to tell when a vendor relationship has quietly promoted you from "customer" to "legally-on-the-hook provider," the contract clauses that turn vendor promises into something enforceable, and how to keep a living inventory of every AI you've bought so nothing slips in through the back door of a SaaS update.
+
 ## The provider/deployer boundary
 
 EU AI Act Article 25 is the operative text. The default position:

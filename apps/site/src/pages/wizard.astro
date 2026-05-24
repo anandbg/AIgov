@@ -3,8 +3,14 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import wizardData from '~/data/wizard.json';
 
 const { questions } = wizardData;
+// Make the Astro `base` available to the inline browser script via a data attribute
+// (import.meta.env.BASE_URL is build-time only and can't be referenced from the
+// client-side <script> block directly).
+const BASE = import.meta.env.BASE_URL;
+const baseTrimmed = BASE.endsWith('/') ? BASE.slice(0, -1) : BASE;
 ---
 <StarlightPage frontmatter={{ title: 'Wizard — topics to discuss with counsel', description: 'Answer five questions; receive a checklist of governance topics — cross-linked to the 12-stage narrative.', tableOfContents: false }}>
+  <span data-aigov-base={baseTrimmed} hidden></span>
   <p>This wizard collects no personal data. Your answers are encoded into the URL hash; the resulting URL is shareable and reproduces the same checklist. The output is framed as <strong>topics to discuss with counsel for your jurisdiction</strong> — not a tailored compliance checklist, not legal advice.</p>
 
   <section id="wizard-jurisdiction-disclaimer" class="juris-disclaimer" hidden>
@@ -48,6 +54,11 @@ const { questions } = wizardData;
 <script>
   import wizardData from '../data/wizard.json';
   type Topic = (typeof wizardData)['topics'][number];
+
+  // Read the Astro base path from a server-rendered data attribute so that
+  // the in-browser link-builders can prefix it (e.g. "/AIgov").
+  const BASE: string =
+    document.querySelector<HTMLElement>('[data-aigov-base]')?.dataset.aigovBase ?? '';
 
   const JURISDICTION_NOTES: Record<string, string> = {
     eu: 'EU AI Act + GDPR apply. The questions below frame obligations for both provider and deployer roles.',
@@ -137,14 +148,14 @@ const { questions } = wizardData;
       const meta = document.createElement('div');
       meta.className = 'wizard-checklist-meta';
       const stageLink = document.createElement('a');
-      stageLink.href = `/stages/${t.stage}/`;
+      stageLink.href = `${BASE}/stages/${t.stage}/`;
       stageLink.textContent = `→ stage ${t.stage.split('-')[0]}`;
       meta.appendChild(stageLink);
       for (const c of t.citations) {
         const sep = document.createTextNode(' · ');
         meta.appendChild(sep);
         const a = document.createElement('a');
-        a.href = `/regulations/${c.source}/`;
+        a.href = `${BASE}/regulations/${c.source}/`;
         a.textContent = c.label;
         meta.appendChild(a);
       }
@@ -165,8 +176,8 @@ const { questions } = wizardData;
     lines.push(`Generated from <${window.location.href}>`);
     lines.push('');
     for (const t of matched) {
-      const cites = t.citations.map((c) => `[${c.label}](/regulations/${c.source}/)`).join(' · ');
-      lines.push(`- [ ] ${t.label} — [stage ${t.stage.split('-')[0]}](/stages/${t.stage}/) · ${cites}`);
+      const cites = t.citations.map((c) => `[${c.label}](${BASE}/regulations/${c.source}/)`).join(' · ');
+      lines.push(`- [ ] ${t.label} — [stage ${t.stage.split('-')[0]}](${BASE}/stages/${t.stage}/) · ${cites}`);
     }
     lines.push('');
     lines.push('_This is not legal advice. The items above are governance topics to raise with qualified counsel for the selected jurisdiction._');

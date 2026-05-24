@@ -1,13 +1,15 @@
 ---
 import { Icon } from 'astro-icon/components';
 import DisclaimerBanner from './DisclaimerBanner.astro';
+import { withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
 ---
 <footer class="site-footer">
   <nav class="site-footer-nav" aria-label="Site footer">
-    <a class="site-footer-link" href="https://github.com/PLACEHOLDER_ORG/AIgov" rel="noopener">
+    <a class="site-footer-link" href="https://github.com/anandbg/AIgov" rel="noopener">
       <Icon name="lucide:github" /> View source
     </a>
-    <a class="site-footer-link" href="/feed.xml">
+    <a class="site-footer-link" href={withBase(BASE, '/feed.xml')}>
       <Icon name="lucide:rss" /> Subscribe via RSS
     </a>
   </nav>

@@ -30,6 +30,25 @@ This stage explains the four tiers, the decision rules that map a system to a ti
 
 <MermaidJourney currentStage={2} />
 
+## In plain English
+
+Think about how airport security works. Some things — a loaded firearm in carry-on — aren't allowed on the plane at any price. Some passengers go through the full screening line, take off their shoes, unpack their laptops. Some are pre-cleared and walk through in two minutes. And nobody screens the bottle of water you buy *after* you've passed security at all. Same airport, same day, four very different levels of scrutiny — and the level is decided by what could go wrong, not by who you are.
+
+**Risk tiering** is exactly that, but for AI systems. Before you build something, you rate the risk: what could go wrong if this AI makes a mistake, and who gets hurt? The answer tells you how much paperwork, oversight, and human review the system needs. A spam filter and a tool that decides who gets a mortgage are both "AI," but they should not get the same treatment, and tiering is how you make that call on purpose instead of by accident.
+
+The world's reference point for this is the **EU AI Act** — Europe's law on AI. Even companies that don't operate in Europe tend to use its four tiers, because regulators in other countries are quietly copying the same shape. Learn this vocabulary once and it works almost everywhere.
+
+The four tiers in everyday words:
+
+- **Unacceptable / banned** — these uses of AI aren't allowed at all (social scoring, manipulating vulnerable people, a handful of others).
+- **High-risk** — allowed, but with the heaviest oversight and paperwork (loan decisions, hiring, medical devices, critical infrastructure).
+- **Limited risk** — allowed with a clear "you're talking to AI" notice (chatbots, deepfakes, anything synthetic).
+- **Minimal risk** — most everyday AI; almost no special rules apply (spam filters, recommendation engines, autocomplete).
+
+The trick is that the tier depends on *how the AI is used*, not how clever the model is. The same language model can be minimal-risk in one product and high-risk in another. That's why you decide the tier before you build — getting it wrong is expensive, and getting it right early sets the budget for everything else.
+
+By the end of this page you'll know which tier your AI system belongs to, why, and what that tier obligates you to do.
+
 ## The four tiers — what each one obligates
 
 The EU AI Act formalises four tiers that have become the de facto reference vocabulary even outside the EU. Each tier triggers a different set of obligations.

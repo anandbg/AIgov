@@ -5,6 +5,18 @@
  * malformed URLs — validate at the call site.
  */
 
+/**
+ * Join an Astro `import.meta.env.BASE_URL` (e.g. "/AIgov/") with an absolute
+ * path (e.g. "/stages/01-ai-policy/") and return a single normalised path
+ * ("/AIgov/stages/01-ai-policy/"). Trailing slash on `base` and leading slash
+ * on `path` are both tolerated.
+ */
+export const withBase = (base: string, path: string): string => {
+  const b = base.endsWith("/") ? base.slice(0, -1) : base;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${b}${p}`;
+};
+
 /** Stage page: /stages/{slug}/ */
 export const stageUrl = (slug: string): string => `/stages/${slug}/`;
 

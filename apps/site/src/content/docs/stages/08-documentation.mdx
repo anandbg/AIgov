@@ -29,6 +29,25 @@ This stage explains the four core documentation artefacts, the generation patter
 
 <MermaidJourney currentStage={8} />
 
+## In plain English
+
+Think of the maintenance logbook in the cockpit of a passenger aeroplane. Every modification, every part swap, every inspection — written down, signed, dated. Years later, if anything goes wrong, an investigator can open that logbook and rebuild the entire history of the aircraft without ever speaking to the crews who flew it. The logbook is how the aeroplane remembers itself.
+
+Documentation for an AI system plays exactly that role. It's the act of writing down — in clear, plain words — what the system is, how it was built, what it can do, what it can't, who tested it, what the tests showed, and who said "yes, this is fit to use." Six months from now the original team may have moved on. A regulator may come knocking. A customer's lawyer may ask hard questions. A new engineer may need to pick the system up at 2am. None of those people should need to phone the person who built it. The documentation should answer them on its own.
+
+This isn't extra paperwork for paperwork's sake. It's the only way an organisation has memory. Without it, every decision has to be re-made from scratch, every risk has to be re-discovered, and every promise made to a customer or regulator is essentially a verbal one.
+
+Good AI documentation actually says, about a system:
+
+- **what it does**, in one paragraph a non-engineer can understand
+- **what it was trained on**, broadly — where the data came from
+- **what it's good at**, and what it's known to be bad at — the honest limitations
+- **how it was tested** and what the results were
+- **who owns it** and who signed it off
+- **when it was last reviewed**, so a reader can tell if they're looking at something current or something stale
+
+By the end of this page you'll know which documents an AI system really needs, why hand-written documentation almost always rots, and the small set of habits — generating from build outputs, locking it into CI, reviewing the narrative bits like you review code — that keep documentation alive instead of letting it quietly drift out of date.
+
 ## The four core artefacts
 
 Every AI system in production needs four documents, regardless of regime:

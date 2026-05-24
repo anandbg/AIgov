@@ -17,3 +17,4 @@ coverage/
 !.vscode/settings.json.example
 pnpm-debug.log*
 dist-ssr/
+.lighthouseci/
