@@ -1,0 +1,1 @@
+Regulations and snapshots are populated by the Phase 3 pipeline (TRK-01..04). Each tracked source gets a folder `<source>/index.md` + `<source>/snapshots/YYYY-MM-DD.md`. See `_phase1-fixture/` for the minimal example.
