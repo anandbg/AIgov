@@ -25,41 +25,148 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-An <GlossaryTerm term="AI governance" /> programme starts with a written policy. Without it, every other stage in this journey runs on tacit assumptions that change with leadership and budget cycles. The policy is the artefact that survives.
+An <GlossaryTerm term="AI governance" /> programme starts with a written policy. Without it, every other stage in this journey runs on tacit assumptions that change with leadership and budget cycles. The policy is the artefact that survives — the one document an auditor, a board member, or a new hire will read first to understand how decisions about AI actually get made inside the organisation.
+
+This stage explains what an AI policy contains, why it must come before everything else, and how to write one that doesn't immediately rot.
 
 <MermaidJourney currentStage={1} />
 
-## What the policy actually contains
+## What an AI policy is — and isn't
 
-An AI policy is not a marketing statement. It is the binding internal document that names:
+An AI policy is a **binding internal document** that names, in plain language:
 
-- The categories of AI systems your organisation will build, buy, or deploy.
-- The risk tiers (see [Risk Tiering](/stages/02-risk-tiering/)) that gate approval.
-- The owners of each downstream control: red-teaming, monitoring, incident response.
-- What is explicitly off-limits (e.g., emotion recognition in workplaces, biometric categorisation).
+- The categories of AI systems your organisation will build, buy, or deploy
+- The risk-tiering rubric used to classify each system (see [Risk Tiering](/stages/02-risk-tiering/))
+- The named owners of each downstream control: red-teaming, monitoring, incident response, vendor governance, data lineage
+- The use-cases that are **explicitly off-limits** — biometric categorisation in workplaces, emotion recognition on customers, social scoring of staff, autonomous high-stakes decisions without human review
+- The exception process — what does "needs board approval" actually look like in practice, who sits on the board, how long does a decision take
+
+An AI policy is **not** a marketing statement, a press release, or a values manifesto. It does not say "we believe AI should be fair and transparent." It says "claim-fraud models above 50,000 EUR exposure require the Chief Risk Officer's written approval before deployment."
+
+The difference matters because **regulators, insurers, and auditors all read the policy before they read anything else.** If the policy is aspirational prose, the rest of your evidence is interpreted in that light. If the policy is operational, every downstream artefact has a parent to point back to.
+
+## The three sections every AI policy needs
+
+A working AI policy has three sections. Most organisations write the first two and skip the third — which is exactly why their policies stop binding anyone within a year.
+
+### 1. Scope — what counts as "an AI system"
+
+A policy that doesn't define its own boundaries cannot be enforced. Pin down:
+
+- **Capability boundary.** Are LLM-backed features in scope? Classical ML? Rule-based decision systems with a "machine learning enabled" flag? The EU AI Act's Article 3(1) definition is a usable starting line — broad enough to capture genuine risk, narrow enough to exclude every Excel macro with IF statements.
+- **Lifecycle boundary.** Are research-only models in scope? Pre-launch prototypes? Third-party models you only call via API? The honest answer is usually "research and pilots have a lighter-weight version of the same controls" — name that explicitly so people know how to follow the rule.
+- **Geographic boundary.** Which jurisdictions does the policy bind? If the organisation operates in the EU, the UK, and the US, the policy must accommodate all three regimes by reference (and the [Compliance](/stages/04-compliance/) stage shows what that means operationally).
+
+### 2. Controls catalogue — what we do, and who owns it
+
+For every category of AI system in scope, the policy names:
+
+- **The risk-tier rubric** used to classify it (criteria, examples, edge cases)
+- **The mandatory controls** at each tier (high-risk systems get conformity assessment, post-market monitoring, etc.)
+- **The named owners** — by role, not by individual — for each control
+- **The escalation path** when something fails
+
+The "by role, not by individual" is critical: a policy that names individuals breaks the day someone leaves the company. A policy that names roles ("the AI Risk Owner shall…") binds whoever holds that role today.
+
+### 3. Off-limits list and exception process
+
+The section everyone skips. The off-limits list is short, specific, and uses imperative language:
+
+- "No emotion recognition or affect inference in workplace or educational contexts."
+- "No biometric categorisation by political opinion, religious belief, sexual orientation, or trade-union membership."
+- "No real-time biometric identification in public spaces for law-enforcement purposes."
+- "No fully-autonomous decisions on credit, employment, housing, or essential services without a human-in-the-loop reviewer with documented authority to override."
+
+Each item maps to a real-world regulatory boundary — EU AI Act Article 5 prohibitions, GDPR Article 22 automated-decision-making rules, sector-specific bans (e.g., NYC Local Law 144 for employment screening). The off-limits list is the policy's teeth; without it, the rest is hand-waving.
+
+The **exception process** acknowledges that a novel use-case might land on the boundary. Document the named approver (board sub-committee, not "the team"), the required artefacts (risk memo, legal review, post-deployment review schedule), and the time it will realistically take. A two-week exception process that the team knows about is infinitely better than a one-day exception process that everyone bypasses.
+
+## Three persona views on the same policy
 
 <PersonaSection persona="exec">
-The policy is the artefact your board, your insurer, and your auditor will all read first. It is more durable than any quarterly KPI. Treat it as a controlled document with version history.
+The AI policy is the artefact your board, your insurer, and your auditor will all read first. It is more durable than any quarterly KPI. Treat it as a controlled document with version history, an owner accountable for keeping it current, and a quarterly review cycle.
+
+The single most expensive failure mode is **vagueness designed to preserve optionality**. Leadership often pushes for "flexible" off-limits language ("we'll evaluate emotion recognition on a case-by-case basis") because they don't want to foreclose future product directions. A regulator reading that language assumes you don't actually have a policy — and treats your other evidence accordingly.
+
+Budget two outcomes: (a) the policy will be read by counsel before deployment of any high-risk system; (b) the policy will be cited in your insurance disclosures. Both increase the legal weight of every word.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
 Every system you build will be classified against this policy. The earlier engineering input lands in the policy text, the less rework later. Push back on language that conflates "high-risk" tier with "anything using ML."
+
+Specific things to fight for in the drafting phase:
+
+- **A clear research-vs-production line.** Most engineering work should live in a lighter-weight pre-production regime; the policy should not require a full conformity-assessment file before an experiment can run on synthetic data.
+- **Decision-record templates linked from the policy.** A model card template + a risk-tier template means engineers fill in forms instead of inventing structure under deadline pressure.
+- **Named on-call rotation for the risk-owner role.** "The Senior ML Engineer of Record" is enforceable; "ML Engineering leadership" is not.
+
+If the policy doesn't have a `docs/ai-policy.md` (or equivalent) committed to a repo with PR-based change control, the org doesn't actually have a policy — it has a slide deck.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-The AI policy is the parent document for your AIMS (per ISO/IEC 42001). It satisfies the EU AI Act's Article-9 risk-management-system documentation requirements when paired with the per-system risk file.
+The AI policy is the parent document for the AIMS (per ISO/IEC 42001 Clause 5.2). It satisfies the EU AI Act's Article 9 risk-management-system documentation requirement when paired with the per-system risk file. It substantiates the GDPR Article 5(2) accountability principle by demonstrating that AI processing has documented governance.
+
+Three drafting traps to avoid:
+
+1. **Copying ISO 42001's clause language verbatim** without adapting to the organisation. Auditors recognise boilerplate and treat it as evidence of unawareness, not maturity.
+2. **Failing to integrate with existing IS policies.** The information-security policy, data-protection policy, and ethics code already exist. The AI policy should reference them, not duplicate them. Duplication creates drift and contradiction.
+3. **Treating the policy as eternal.** It needs a stated review cadence (quarterly is realistic; annual is borderline), a stated change-control process (PR + named approver), and a stated version history.
+
+The clause that audit notes most often cite as deficient is the one defining the **AI policy owner's authority to stop deployment**. If the AI Risk Owner cannot override product timelines, the policy is decorative.
 </PersonaSection>
 
-## The fictional company perspective
+## Fictional company in narrative
 
-[Sigma Health Berlin](/stories/sigma-health/) drafted their AI policy in eight weeks. The hardest section was the off-limits list — leadership wanted to "leave options open" while regulatory counsel pushed for explicit exclusions. They landed on a hybrid: a narrow off-limits list plus a "needs board approval" gate for novel use-cases.
+[Sigma Health Berlin](/stories/sigma-health/) drafted their AI policy over eight weeks in early 2026. The hardest section was the off-limits list — leadership wanted to "leave options open" while regulatory counsel pushed for explicit exclusions. They landed on a hybrid: a narrow off-limits list (no emotion recognition, no autonomous diagnosis without clinician review) plus a "needs board approval" gate for novel use-cases. The board approval gate has been triggered twice in the first year: once for a research collaboration with a German university (approved after two weeks of legal review), once for a prospective contract with a US insurance carrier (declined because the carrier's intended use crossed the no-autonomous-diagnosis line).
+
+The policy itself lives at `docs/ai-policy.md` in their internal docs repo. Every change goes through a PR that requires sign-off from the Head of AI Governance, the Chief Medical Officer, and the General Counsel. The PR template includes a "downstream impact" section that names which existing systems will need re-classification under the new rule.
+
+[Acme Robotics US](/stories/acme-robotics/) took the opposite approach — they wrote a short policy (six pages) and a long companion document ("Acme Robotics AI Operating Standard") with the operational detail. The split lets the policy be read in fifteen minutes by a board member and the standard be read in two hours by a new engineer. Their reviewer notes that the policy and standard are kept consistent via a CI script that grep-checks for divergent terminology.
+
+## What "good" looks like
+
+A working AI policy is recognisable in a 5-minute skim:
+
+- **Length**: 4–12 pages. Anything shorter elides necessary structure; anything longer is unread.
+- **Named owners**: every paragraph that imposes an obligation names the role that owns it.
+- **Cross-references**: links to ISO 42001 Annex A controls, EU AI Act articles, GDPR articles, sector codes — not as marketing, but as a map for the auditor.
+- **Off-limits list**: explicit, with rationale.
+- **Exception process**: documented, with stated turnaround.
+- **Review cadence**: stated, with the last review date visible.
+- **Change history**: a table at the top showing the last three substantive changes.
+
+## What "bad" looks like
+
+Equally recognisable:
+
+- Aspirational language ("we strive to") with no operational verbs.
+- "AI ethics principles" listed but no decision rules tied to them.
+- Off-limits list missing or vague ("we will not use AI in inappropriate ways").
+- Owners absent or named by individual.
+- No exception process — so every exception becomes a one-off email thread.
+- Last reviewed: more than 18 months ago.
+
+## Required citations
 
 <RegQuote source="iso-iec-42001" article="Clause-5.2" snapshot="2026-05-24" regulationName="ISO/IEC 42001">
 Top management shall establish, implement and maintain an AI policy that is appropriate to the purpose of the organisation, provides a framework for setting AI objectives, includes a commitment to satisfy applicable requirements, and includes a commitment to continual improvement of the AI management system.
 </RegQuote>
 
-**Why this matters:** the policy is the only thing that holds when the team that built the system leaves. Make it short, make it readable, and make sure the owners named in it actually know they're named.
+**Why this matters:** ISO/IEC 42001's Clause 5.2 is the management-system standard's anchor for the AI policy artefact. If an organisation certifies against 42001, this is the clause the auditor will sample first.
 
----
+<RegQuote source="eu-ai-act" article="Art-9" snapshot="2026-05-24" regulationName="EU AI Act">
+A risk management system shall be established, implemented, documented and maintained in relation to high-risk AI systems. The risk management system shall be understood as a continuous iterative process planned and run throughout the entire lifecycle of a high-risk AI system, requiring regular systematic review and updating.
+</RegQuote>
 
-This stage is the entry point. The next stage — [Risk Tiering](/stages/02-risk-tiering/) — is where the policy starts having teeth.
+**Why this matters:** the EU AI Act's Article 9 is the legal hook that requires per-system risk management; the AI policy is the parent that makes the per-system files coherent and consistent across the organisation.
+
+## Common pitfalls
+
+- **Writing the policy after the first deployment.** Every retrofitted policy contains compromises that wouldn't have been made if the policy came first. Once a high-profile system is in production, the off-limits list bends to avoid breaking what already shipped.
+- **Treating the policy as legal-only or engineering-only.** A policy authored by counsel without engineering input mandates controls that cannot be implemented. A policy authored by engineering without legal review misses entire categories of obligation. The drafting team should be 2–3 people from each function.
+- **Skipping the review cadence.** A policy that is never reviewed accumulates drift between what it says and what teams actually do. Quarterly is the realistic minimum.
+- **Hiding the policy behind login walls.** External reviewers — auditors, insurers, partners — need to read it on a documented timetable. Publishing the policy externally (or making it readily available on request) signals seriousness; hiding it signals the opposite.
+
+## What's next
+
+The AI policy makes [Risk Tiering](/stages/02-risk-tiering/) operational. Without a written tier rubric in the policy, every classification is arguable; with one, the classification becomes a documented decision against a stated rule.

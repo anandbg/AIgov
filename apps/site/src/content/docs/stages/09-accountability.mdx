@@ -24,41 +24,186 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-Every control in your <GlossaryTerm term="AI governance" /> programme needs a named human owner with stated authority. Vague ownership ("the data team") is functionally the same as no ownership.
+Every control in an <GlossaryTerm term="AI governance" /> programme needs a named human owner with stated authority. Vague ownership ("the data team," "ML engineering," "leadership will decide") is functionally the same as no ownership. When an incident happens at 2am, the answerable question is not "who is responsible for AI?" but "who has the authority to pause this system, right now, without needing to escalate?"
+
+This stage explains the accountability matrix that makes the answer obvious, the named roles that show up in every working programme, and how to make accountability survive personnel turnover.
 
 <MermaidJourney currentStage={9} />
 
 ## The accountability matrix
 
-Maintain a per-system RACI that names:
+A per-system **RACI** (Responsible / Accountable / Consulted / Informed) is the operational form of accountability. For each control in the conformity-assessment file (or NIST AI RMF MANAGE function), name:
 
-- **Owner** — the single named human accountable for the system end-to-end.
-- **Risk owner** — the named human who signs the risk-tier rationale.
-- **Data steward** — the named human accountable for the training-data integrity.
-- **Incident commander** — pre-assigned, on-call, with declared authority to pause the system.
+| Control | Responsible | Accountable | Consulted | Informed |
+|---|---|---|---|---|
+| Risk-tier classification | AI Risk Owner | Head of AI Governance | DPO, Eng Lead | Board AI Sub-committee |
+| Data lineage | Data Eng Lead | Head of Data | DPO | AI Risk Owner |
+| Bias evaluation | ML Eng Lead | AI Risk Owner | DPO, Ethics Reviewer | Head of Product |
+| Red-team programme | Security Eng Lead | AI Risk Owner | ML Eng Lead | Board AI Sub-committee |
+| Incident response | On-call SRE | Incident Commander | Legal, Comms, AI Risk Owner | Board AI Sub-committee |
+| Conformity-assessment file | Compliance Lead | Head of AI Governance | Legal, ML Eng Lead | Notified Body |
+| Vendor governance | Procurement Lead | Head of AI Governance | Legal, IT Security | AI Risk Owner |
+| Monitoring | SRE Lead | AI Risk Owner | ML Eng Lead | Head of Product |
+
+The matrix names **roles**, not individuals — a person who holds a role today may leave; the role persists.
+
+## The five named roles every working programme has
+
+Regardless of organisation size, the same five role-names show up across functioning programmes:
+
+### 1. AI Risk Owner
+
+A named senior role (typically VP-level or one report from C-level) with **documented authority to pause deployment** of any AI system. Reports administratively into Risk / Compliance / Legal — never into Product — to preserve independence.
+
+The single most important accountability test: can the AI Risk Owner stop a deployment over the product team's objection? If the answer is "they'd have to escalate," the role is decorative.
+
+### 2. Head of AI Governance
+
+The owner of the AI policy, the controls catalogue, the conformity-assessment files, and the regulator relationship. Different from AI Risk Owner: governance is programmatic; risk-ownership is per-decision.
+
+For small organisations, the same person holds both roles. For organisations above ~500 staff or operating multiple high-risk systems, the roles split.
+
+### 3. Data Protection Officer
+
+Required by GDPR Art. 37 for many AI-using organisations (public bodies, organisations carrying out large-scale systematic monitoring or large-scale special-category processing). The DPO's statutory independence (Art. 38(3) — "the DPO shall not receive any instructions regarding the exercise of those tasks") makes them a natural ally for the AI Risk Owner — they can say things product leadership doesn't want to hear with statutory protection.
+
+### 4. Incident Commander (rotating)
+
+A pre-assigned, on-call role with **declared authority to pause the system** during an incident. Typically rotates through SREs / on-call engineers. The role is named on the incident-response runbook (Stage 11); the rotation schedule is published.
+
+### 5. Per-system Engineering Lead
+
+The named engineer of record for the AI system. Sign-off on releases, owner of the model card, contact point for downstream consumers. Per-system rather than per-team because one engineering team often operates multiple AI systems with different owners.
+
+## Making accountability survive personnel turnover
+
+Three structural patterns that keep the matrix valid past the first round of departures:
+
+### Pattern 1: Roles, not individuals, in policy documents
+
+The AI policy says "the AI Risk Owner shall…" not "Alex Chen shall…". The current incumbent is named in a separate roster document maintained by HR; the roster is the source-of-truth for who currently holds each role.
+
+### Pattern 2: Documented authority statements
+
+Each role's authority is documented explicitly:
+
+- "The AI Risk Owner may pause deployment of any AI system without prior approval from product leadership. This authority is delegated by the CEO and confirmed annually by the board AI sub-committee."
+- "The Incident Commander may execute the kill-switch on any production AI system during an active incident, without prior approval, with notification within one hour."
+
+Without the statement, the authority is folklore.
+
+### Pattern 3: Handover rituals
+
+When a role changes hands, a documented handover happens within two weeks:
+
+- The outgoing role-holder writes a "state of the role" document covering open issues, upcoming reviews, key relationships.
+- The incoming role-holder reads it, signs the handover acceptance, and is added to the roster.
+- The roster change triggers updates to access lists, on-call rotations, and any documentation that names the role-holder (e.g., the model cards' "named owner role" field, though the role itself doesn't change).
+
+## Three persona views
 
 <PersonaSection persona="exec">
-The accountability map is the artefact your board will look at when an incident happens. Make sure the people listed actually know they are listed and have the authority you say they have.
+The accountability map is the artefact the board will look at when an incident happens. Make sure the people listed actually know they are listed and have the authority you say they have.
+
+Three leadership actions that make this real:
+
+1. **Annual board confirmation** of the AI Risk Owner's pause-authority. The confirmation is minuted; the minute is the artefact that survives the board's own turnover.
+2. **A salary band that signals seriousness.** An AI Risk Owner role priced at IC4 cannot credibly override an IC6 Director of Product. The role needs to be priced at the level it operates at.
+3. **A separate reporting line from product.** The structural conflict is what guarantees the role works; aligned reporting guarantees it doesn't.
+
+The expensive failure mode is **diffuse accountability dressed up as "shared ownership."** When everyone owns it, no one does. Push for one named owner per control, every time, even when the natural instinct is to spread responsibility for political comfort.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
-The risk owner needs to be senior enough to push back when product wants to ship a system that fails the risk check. Wire that authority into the merge-block path.
+The risk owner needs to be senior enough to push back when product wants to ship a system that fails the risk check. Wire that authority into the merge-block path:
+
+- The AI Risk Owner is a required reviewer on PRs that touch `risk-tier.yaml`, `conformity-assessment.md`, or any file under `compliance/`.
+- The merge-block rule is enforced by CI, not by social convention.
+- A PR awaiting AI-Risk-Owner review is visibly stuck — a dashboard surfaces the backlog so escalations are factual.
+
+For incident response specifically:
+
+- The Incident Commander's kill-switch authority is wired into the actual kill-switch — the kill-switch endpoint only accepts requests from accounts in the IC role group.
+- The role group membership is the on-call rotation, not "anyone in SRE."
+- Handover happens automatically on rotation cut-over; no manual access changes.
+
+The named-Engineering-Lead-per-system pattern means each system has a CODEOWNERS file entry: changes to that system require the named engineer's review. When the engineer changes roles, the CODEOWNERS update is part of the handover ritual.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-EU AI Act Article 26 obligations for deployers include "natural persons to whom human oversight is assigned have the necessary competence, training and authority." The competence and authority parts get the most audit scrutiny.
+EU AI Act Article 26 obligations for deployers include "natural persons to whom human oversight is assigned have the necessary competence, training and authority, as well as the necessary support." The competence and authority parts get the most audit scrutiny.
+
+Documentation for each named role:
+
+1. **Role description** — what the role exists to do.
+2. **Authority statement** — what the role-holder can decide, without escalation.
+3. **Competence requirements** — qualifications, training, ongoing CPD expectations.
+4. **Reporting line** — to whom the role-holder reports administratively and functionally.
+5. **Conflict-of-interest declaration** — refreshed annually.
+6. **Training records** — what training has the current incumbent completed, when.
+
+The audit failure: a "named human oversight" assignment in the conformity-assessment file with no training record behind the name. Auditors will ask "how do you know this person has the competence the regulation requires?" — and a name in a table is not an answer.
+
+ISO/IEC 42001 Clause 5.3 ("organizational roles, responsibilities and authorities") is the management-system equivalent. The clause language is generic enough that it satisfies almost any documented role structure — the failure mode is undocumented or contradictory structures.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Aurora Insurance London](/stories/aurora-insurance/) names their AI Compliance Lead as the risk owner and the on-call SRE rotation as the incident commander chain. The named pair appears on every conformity-assessment file and rotates only with formal handover documentation.
+[Aurora Insurance London](/stories/aurora-insurance/) names their AI Compliance Lead as the AI Risk Owner and the on-call SRE rotation as the Incident Commander chain. The named pair appears on every conformity-assessment file. The role-holders rotate only with formal handover documentation.
+
+Their handover ritual:
+
+1. Outgoing AI Risk Owner writes a 4-section handover document: open risk items, pending regulatory engagements, ongoing audits, key relationships.
+2. Incoming role-holder reads, signs, and is added to the role-roster.
+3. A calendar invite goes out to the board AI sub-committee announcing the change.
+4. The role-roster diff is committed to a private repo; subsequent compliance documents reference the role, which resolves to the current incumbent via the roster.
+
+[Sigma Health Berlin](/stories/sigma-health/) splits accountability finer because of their regulated-medical-device context: they have an AI Risk Owner, a separate Clinical Safety Officer, and a separate Quality Manager. Each role is statutorily required by the medical-device regime; the AI governance role layers on top. The three role-holders meet weekly; conflicts between them escalate to the Chief Medical Officer.
+
+[Acme Robotics US](/stories/acme-robotics/) operates without a DPO (no GDPR scope — US-only operations) but appoints a Privacy Counsel as the functional equivalent. The Privacy Counsel sits inside the legal team but has direct dotted-line communication with the AI Risk Owner.
+
+## What "good" looks like
+
+Working accountability:
+
+- **A role-based RACI** for every control in the conformity-assessment file.
+- **A role-roster** maintained by HR (or equivalent) showing the current incumbent of each role.
+- **Authority statements** explicit in policy documents.
+- **Annual board confirmation** of senior-role authority.
+- **Handover rituals** documented and followed on role changes.
+- **Training records** per role-holder, kept current.
+- **CI enforcement** of merge-blocks on AI Risk Owner review for sensitive files.
+
+## What "bad" looks like
+
+- "Shared ownership" without naming a single accountable role.
+- Roles named by individual ("Alex is the AI Risk Owner") rather than by position.
+- No authority statement — folklore in place of policy.
+- Same person as Product Owner and Risk Owner (structural conflict guaranteed).
+- No handover ritual — knowledge walks out the door with departing role-holders.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-26" snapshot="2026-05-24" regulationName="EU AI Act">
 Deployers shall assign human oversight to natural persons who have the necessary competence, training and authority, as well as the necessary support.
 </RegQuote>
 
-**Why this matters:** when something fails at 3am, the question is "who has the authority to pause it?" If the answer is "we'll need to escalate to find out", the system is unsupervised.
+**Why this matters:** the "competence, training and authority" three-part test is the audit baseline. Evidence required for each: training records, qualification documentation, written authority statement.
 
----
+<RegQuote source="iso-iec-42001" article="Clause-5.3" snapshot="2026-05-24" regulationName="ISO/IEC 42001">
+Top management shall ensure that the responsibilities and authorities for relevant roles concerning AI systems are assigned and communicated within the organization. Top management shall assign the responsibility and authority for: (a) ensuring that the AI management system conforms to the requirements of this document; (b) reporting on the performance of the AI management system to top management.
+</RegQuote>
 
-Next: [Agentic AI Oversight](/stages/10-agentic-oversight/) — the special case of systems that act, not just predict.
+**Why this matters:** ISO 42001 Clause 5.3 is the management-system anchor for assigned authority. The clause is satisfied by the role-based RACI plus the role-roster plus the authority statements.
+
+## Common pitfalls
+
+- **Same person as Risk Owner and Product Owner.** Structural conflict — the role exists to provide independent check on product timelines.
+- **No documented authority.** The role-holder may believe they can pause deployment; without written authority, when push comes to shove, they cannot.
+- **Roles named by individual.** Departures invalidate the documentation; new joiners inherit ambiguous authority.
+- **Training records missing.** "We have an AI Risk Owner" is undermined by "we have no record of any training they have completed."
+- **No handover ritual.** Knowledge transfer happens by accident or not at all.
+
+## What's next
+
+Accountability is the role layer. [Agentic AI Oversight](/stages/10-agentic-oversight/) is the next stage — special-case controls for systems that take actions rather than make predictions.

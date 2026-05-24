@@ -24,40 +24,196 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-Incident response is the operational moment your governance programme stops being a planning exercise and becomes a runbook. Time-to-detect, time-to-pause, time-to-notify all carry regulatory weight.
+Incident response is the operational moment a governance programme stops being a planning exercise and becomes a runbook. **Time-to-detect, time-to-pause, time-to-notify all carry regulatory weight** — under EU AI Act Article 73, the clock on the 15-day notification window starts the moment a person at the organisation establishes a causal link between the system and a serious incident. The runbook is what makes the calendar manageable.
+
+This stage explains the severity scheme, the shape of a usable runbook, the EU AI Act Article 73 reporting obligations, and how to run a tabletop exercise that surfaces the runbook's broken bits before a real incident does.
 
 <MermaidJourney currentStage={11} />
 
-## The shape of a usable runbook
+## The five phases of incident response
 
-- **Detection** — what signal counts as an incident; who triages it.
-- **Severity** — a small taxonomy (typically S0–S3) mapping to response time and escalation.
-- **Containment** — first action; usually pause or rollback.
-- **Notification** — internal escalation matrix + external regulator timelines.
-- **Post-mortem** — blameless, written, linked from the model card.
+A complete runbook covers five phases. Each phase has a named role and a stated time target.
+
+### Phase 1: Detection
+
+What signal counts as an incident? Sources include:
+
+- Monitoring alerts (drift on a key metric, refusal-rate spike, latency anomaly)
+- User reports (via the "Found an issue?" link, support tickets, regulator notice)
+- Internal observation (engineer notices an unexpected output during code review)
+- Vendor notification (the upstream foundation-model provider notifies of a model issue)
+
+**Named role**: the on-call SRE for the first triage. The named **Incident Commander** is paged within minutes if the SRE escalates.
+
+**Time target**: detection-to-acknowledgement under 15 minutes (24/7).
+
+### Phase 2: Severity classification
+
+A small taxonomy that everyone can keep in their head:
+
+| Severity | Definition | Examples | Initial action |
+|---|---|---|---|
+| S0 | Active harm or active regulatory exposure | Wire-transfer agent sending unauthorised payments; data leak in chat output; biometric system misidentifying at scale | Kill switch; legal + comms paged; board notification within 4h |
+| S1 | Material risk of harm, contained | Single-customer incident affecting their data; agent took unexpected costly action recoverable within hours; bias spike on protected attribute | Pause affected system; legal paged; AI Risk Owner decides on disclosure |
+| S2 | Operational degradation or near-miss | Refusal rate spiked; eval suite regression discovered post-deploy; misclassification that didn't propagate to action | Engineer investigates; risk-check trigger fires (Stage 3) |
+| S3 | Informational, no harm | False-positive alert; user-reported issue not reproducible; cosmetic output bug | Log + close after investigation |
+
+Severity is assigned by the Incident Commander, reviewable by the AI Risk Owner. Escalation up the scale is fine; downgrade requires written rationale.
+
+### Phase 3: Containment
+
+First action depends on severity:
+
+- **S0**: kill switch + immediate isolation. The agentic-oversight kill switch (Stage 10) is the operational mechanism for S0 incidents involving agentic systems.
+- **S1**: pause the affected use-case (feature flag off, traffic-route around, rollback to prior model version).
+- **S2**: restrict the system to a safe subset of behaviour while investigation continues.
+- **S3**: investigation only; no system change.
+
+**Named role**: the Incident Commander has authority to execute containment without prior approval. Stage 9's documented authority is what makes this real.
+
+**Time target**: S0 containment within 30 minutes; S1 within 2 hours; S2 within 24 hours.
+
+### Phase 4: Notification
+
+Internal first, then external where required:
+
+**Internal**:
+
+- AI Risk Owner: paged on S0/S1 immediately.
+- Legal: paged on S0 immediately; S1 within 4h.
+- Communications: paged on S0 immediately if public-facing impact.
+- Board AI Sub-committee: notified on S0 within 4h.
+
+**External**:
+
+- **EU AI Act Art. 73 serious-incident reporting**: for high-risk systems, providers must notify market-surveillance authorities of any serious incident **immediately** after establishing a causal link, and in any event **within 15 days**. The window shortens to **2 days** for widespread infringement or critical-infrastructure-related incidents.
+- **GDPR Art. 33 breach notification**: where the incident involves a personal-data breach with likely risk to natural persons, the supervisory authority must be notified **within 72 hours** of becoming aware.
+- **Sectoral**: financial-services regulators, medical-device authorities, transport-safety bodies all have their own notification regimes.
+- **Affected individuals**: where high risk to their rights and freedoms exists (GDPR Art. 34), direct notification to the data subjects.
+- **Customers / partners**: per contractual notification clauses (Stage 5).
+
+The notification timeline is **calendar time, not business time**. A serious incident detected on Friday evening triggers a clock that runs through the weekend.
+
+### Phase 5: Post-mortem
+
+Blameless, written, completed within 14 days of incident resolution, linked from the model card (Stage 8). Covers:
+
+- Timeline of events (detection through resolution)
+- Severity classification (initial and final)
+- Root cause analysis (technical + organisational)
+- Mitigation deployed
+- Lessons learned and action items
+- Sign-off by the Incident Commander, AI Risk Owner, and named accountable role per Stage 9
+
+The post-mortem **feeds back into the system**: action items become tickets, lessons learned become regression tests in the red-team suite (Stage 7), recurring patterns become risk-tier updates (Stage 2).
+
+## Three persona views
 
 <PersonaSection persona="exec">
-The notification window — 15 days under EU AI Act Article 73, sometimes 2 days for widespread infringement — is the externally-imposed clock that decides whether response time is "professional" or "actionable findings".
+The notification window — 15 days under EU AI Act Article 73, sometimes 2 days for widespread infringement, 72 hours under GDPR — is the externally-imposed clock that decides whether response time is "professional" or "regulator-finding." The runbook is the artefact that makes the clock manageable.
+
+Leadership decisions that determine outcomes:
+
+1. **A standing legal contact** with mobile number, available evenings and weekends. The clock doesn't pause for business hours.
+2. **A comms playbook** for AI incidents that is **drafted before** the first incident. A holding statement, an initial-disclosure template, and an FAQ skeleton, all reviewed by legal in advance.
+3. **An incident-cost ledger** that tracks the realised cost of every S0/S1 incident — direct (remediation engineering), regulatory (fines, mandated audits), legal (counsel time, settlements), reputational (customer churn, deal slippage). The ledger is what justifies the runbook investment to a finance team that hasn't yet seen a serious incident.
+
+The expensive failure mode is **treating the runbook as a compliance document that lives on a wiki.** A runbook that hasn't been exercised in 12 months is functionally absent. Quarterly tabletop exercises catch the broken bits (stale contacts, missing access, undocumented assumptions) before a real incident does.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
 Wire the pause action into the same place the kill switch lives (Stage 10). Practise it. Quarterly tabletop exercises catch the broken runbook before the real incident does.
+
+Operational patterns that hold up:
+
+- **The runbook lives in the application repo**, not a separate ops wiki. It is version-controlled, reviewed in PRs, and travels with the code.
+- **Severity classification is a forms-based PR.** When the Incident Commander files an incident, the form populates a structured issue with required fields (severity, affected system, initial action, expected notification windows). Free-form text doesn't scale at 2am.
+- **Pause + rollback are buttons in the operations console**, not commands the SRE has to remember. The button is the kill-switch endpoint from Stage 10, wired to the relevant action.
+- **The notification clocks are tracked in the issue.** When the severity is set, the issue auto-populates the notification deadlines (15 days from establishment-of-causal-link for Art. 73, 72 hours for GDPR Art. 33). The on-call sees the countdown.
+- **Post-mortem template is mandatory.** The template is a PR-based markdown file; sections are required; the AI Risk Owner is a CODEOWNER for the post-mortem directory.
+
+Quarterly tabletop:
+
+- Pick a hypothetical incident (steal one from the OWASP / MITRE catalogues).
+- The Incident Commander runs the response paper-style with the on-call SRE.
+- Mark which steps in the runbook worked, which were ambiguous, which were broken.
+- PR the runbook update before closing the exercise.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-Article 73 incident-reporting obligations apply to providers of high-risk systems and to GPAI providers. Map your serious-incident definition to the article text — vague internal definitions translate poorly to the regulator's form.
+Article 73 incident-reporting obligations apply to providers of high-risk systems and to GPAI providers with systemic risk. Map the serious-incident definition to the article text — vague internal definitions translate poorly to the regulator's form.
+
+The serious-incident definition (Art. 3(49)):
+
+> any incident or malfunctioning of an AI system that directly or indirectly leads to any of the following:
+> (a) the death of a person, or serious damage to a person's health;
+> (b) a serious and irreversible disruption of the management or operation of critical infrastructure;
+> (c) infringement of obligations under Union law intended to protect fundamental rights;
+> (d) serious damage to property or the environment.
+
+Note (c): an AI-system-driven infringement of a fundamental-rights obligation is a serious incident **whether or not anyone was physically harmed**. A discriminatory output at scale on a protected attribute qualifies.
+
+Documentation per incident:
+
+- The serious-incident classification (yes/no, with rationale citing Art. 3(49)).
+- The Article 73 timeline: when established causal link, when reported, who reported, what was reported.
+- The market-surveillance authority correspondence (in and out).
+- Any follow-up requests from the regulator and the response timeline.
+
+The Article 73 report itself is a structured form to the relevant market-surveillance authority — the Commission has published templates that should be used. The 15-day window is the **maximum**; the regulation explicitly requires reporting "immediately" after the causal link is established. Reporting on day 15 with no earlier interim disclosure is technically compliant but politically poor.
+
+For GDPR-overlapping incidents, the 72-hour Article 33 clock runs in parallel and starts at "becoming aware," which is earlier than "established causal link." Coordinate the two notifications — they often go to different authorities with different formatting requirements.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Sigma Health Berlin](/stories/sigma-health/) maintains a one-page incident runbook per high-risk system. The runbook lives next to the model card; the on-call rotation reads it during onboarding and at quarterly drills.
+[Sigma Health Berlin](/stories/sigma-health/) maintains a one-page incident runbook per high-risk system. The runbook lives next to the model card in the docs repo; the on-call rotation reads it during onboarding and at quarterly drills. Their severity scheme overlays the EU AI Act serious-incident definition with their clinical-safety classification (yellow / orange / red), so the same incident gets two parallel classifications and triggers both regulatory and clinical processes.
+
+Their most recent S1 incident: a clinical-summary model produced a structured note that omitted a medication interaction that the source notes had flagged. A clinician caught it during review (the human-oversight loop working as designed). The post-mortem identified that a recent change to the chunking strategy had dropped the line containing the interaction warning below the retrieval threshold. Mitigation: a regression test added to the eval suite covering "interaction warnings preserved across chunking changes," a Stage-3 risk-check triggered, and a notification to the notified body within 5 days (well inside the 15-day window) under Art. 73 conservative reading.
+
+[Densha Logistics Tokyo](/stories/densha-logistics/) runs their dispatch-agent runbook as a literal printed copy taped to the operations-centre wall, plus a digital copy in the repo. The printed copy survives network outages; the digital copy is the source of truth. The runbook explicitly covers the kill-switch authority chain — Incident Commander (on-call SRE), backup (Operations Director), tertiary (Director Sasaki herself). The tertiary path has been exercised twice in eighteen months; both times the kill switch worked as specified.
+
+## What "good" looks like
+
+A working runbook:
+
+- **Five phases** (detection, severity, containment, notification, post-mortem) with named roles and time targets.
+- **Severity taxonomy** (S0/S1/S2/S3) mapped to EU AI Act + GDPR notification triggers.
+- **Quarterly tabletop** exercise with documented findings and runbook updates.
+- **Notification clocks** auto-tracked in the incident issue.
+- **Post-mortem template** mandatory, reviewed by the AI Risk Owner.
+- **Lessons-learned feedback** into regression tests (Stage 7), risk-tier updates (Stage 2), and policy updates (Stage 1).
+- **The runbook in the application repo**, not a separate wiki.
+
+## What "bad" looks like
+
+- A "Severity 1" cell in a spreadsheet with no defined criteria.
+- No notification-clock tracking — the team realises at day 14 they were supposed to notify on day 5.
+- A post-mortem that says "user error" without root-cause analysis.
+- Runbook not exercised in the last year — broken bits unknown until needed.
+- Legal contacts in the runbook out-of-date.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-73" snapshot="2026-05-24" regulationName="EU AI Act">
 Providers of high-risk AI systems placed on the Union market shall report any serious incident to the market surveillance authorities of the Member States where that incident occurred. That reporting shall be made immediately after the provider has established a causal link between the AI system and the serious incident or the reasonable likelihood of such a link, and, in any event, not later than 15 days after the providers or, where applicable, the deployers, becomes aware of the serious incident.
 </RegQuote>
 
-**Why this matters:** the regulator measures incident response on calendar time. The clock starts the moment a person at your organisation knows.
+**Why this matters:** the "immediately" language plus the "15 days" backstop define the regulatory window. A report on day 15 is technically compliant but reads as foot-dragging — early interim disclosure is the protective move.
 
----
+<RegQuote source="uk-ico" article="Breach-Reporting" snapshot="2026-05-24" regulationName="UK ICO breach guidance">
+Where a personal data breach is likely to result in a high risk to the rights and freedoms of natural persons, the data controller shall communicate the personal data breach to the data subject without undue delay. The notification to the supervisory authority must be made within 72 hours of becoming aware of the breach.
+</RegQuote>
 
-Next: [Monitoring](/stages/12-monitoring/) — the always-on counterpart to incident response.
+**Why this matters:** the GDPR Art. 33 / Art. 34 obligations run in parallel to the EU AI Act Art. 73 obligations and frequently on a shorter clock (72 hours vs 15 days). AI incidents that touch personal data trigger both regimes.
+
+## Common pitfalls
+
+- **Severity scheme that conflates technical severity with regulatory severity.** A "P3 bug" might be an Art. 73 serious incident if it touches fundamental rights. Keep the two classifications separate.
+- **Notification deadlines tracked manually.** Calendar arithmetic at 2am produces missed windows. Auto-track from the incident issue.
+- **Post-mortem without action items closed.** A post-mortem that lists 12 lessons learned and closes 0 of them is theatre. Track action-item closure as part of the runbook quality metric.
+- **The Incident Commander rotates without handover.** Stage 9 ritual matters; an incoming Commander who hasn't been briefed on open incidents inherits ambiguity.
+
+## What's next
+
+Incidents are the reactive side. [Monitoring](/stages/12-monitoring/) is the always-on signal layer that catches problems before they become incidents — and provides the empirical data that incident root-cause analysis depends on.

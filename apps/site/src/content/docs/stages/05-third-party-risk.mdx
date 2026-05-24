@@ -27,41 +27,189 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-The hardest <GlossaryTerm term="AI governance" /> question most organisations face is "we did not train this model — what are we still responsible for?" Third-party AI risk is the discipline of answering that question per-vendor, per-use.
+The hardest <GlossaryTerm term="AI governance" /> question most organisations face is "we did not train this model — what are we still responsible for?" Third-party AI risk is the discipline of answering that question per-vendor, per-use — and the regulatory answer is almost always "more than you think."
+
+This stage covers the provider/deployer boundary that most organisations get wrong, the contract clauses that make vendor governance enforceable, and the vendor inventory practice that keeps the surface visible.
 
 <MermaidJourney currentStage={5} />
 
-## Vendor governance checklist
+## The provider/deployer boundary
 
-For every AI vendor:
+EU AI Act Article 25 is the operative text. The default position:
 
-- What contractual data-use limits are in place? Are training-on-your-data rights explicitly excluded?
-- What is the vendor's own AI policy? (Many will share on request.)
-- Where is the model hosted, and which jurisdiction's law applies?
-- How do you receive notice of material model changes?
+- **Provider**: the entity that develops the AI system (or has one developed) and places it on the market under its own name or trademark.
+- **Deployer**: the entity using the AI system under its authority, except where used in the course of personal non-professional activity.
+
+Most organisations using third-party AI think of themselves as deployers and assume the vendor carries the provider obligations. That assumption is correct for many cases — and dangerously wrong for a growing number.
+
+Article 25(1) automatically promotes a deployer to provider when **any** of these conditions hold:
+
+- The deployer puts their **name or trademark** on a high-risk AI system already on the market.
+- The deployer makes a **substantial modification** to a high-risk system already on the market.
+- The deployer modifies the **intended purpose** of a non-high-risk system in a way that makes it high-risk.
+
+Each condition is fact-specific and easy to trip on:
+
+### "Substantial modification" includes most fine-tuning
+
+Recital 84 explains that a modification is substantial if it affects compliance with the regulation or changes the intended purpose. Fine-tuning a foundation model on the organisation's own data **frequently** crosses that line — particularly when:
+
+- The fine-tuning shifts the model's behaviour on protected-attribute fairness metrics.
+- The fine-tuning unlocks capabilities (tool use, longer context, specific-domain reasoning) the base model didn't reliably have.
+- The deployer integrates the model into a workflow that constitutes a new intended purpose.
+
+The conservative default: assume fine-tuning is a substantial modification, document the analysis explicitly, and only claim otherwise when the team can defend the claim in writing.
+
+### "Name or trademark" includes white-labelling
+
+White-labelling a vendor product (selling it under the organisation's own brand) automatically promotes the organisation to provider status. The vendor's obligations don't disappear — but the organisation now carries the same obligations in parallel.
+
+### "Intended purpose modification" can happen accidentally
+
+A vendor's chatbot intended for "customer-service triage" becomes "automated complaint resolution" when the organisation removes the human-in-the-loop step. The intended purpose changed without the model changing — and the organisation is now the provider of a high-risk decision system.
+
+## The vendor inventory
+
+The foundation of third-party AI governance is **knowing what you have**. The vendor inventory captures, per-vendor-per-product:
+
+- **Vendor identity** (legal entity, jurisdiction, registered office)
+- **Product name and version**
+- **Intended-use statement** from the vendor's documentation
+- **Actual use** in the organisation (often different from intended)
+- **Risk-tier classification** under the organisation's rubric
+- **Data flow** (what the organisation sends, what comes back, where it's stored)
+- **Contract reference** (MSA, DPA, AI-specific addendum)
+- **Material-change-notification clause** (yes/no, with N-day notice period)
+- **Audit rights** (yes/no)
+- **Exit clause** (data return, deletion warranties)
+
+The inventory lives in a structured format — JSON, YAML, or a database table — not a slide deck. Quarterly reconciliation walks the inventory against actual procurement records.
+
+## The vendor contract — the seven AI-specific clauses
+
+For every AI vendor, the contract (or AI-specific addendum) should address:
+
+### 1. Data-use limitation
+
+The contract explicitly forbids the vendor from training their own models on customer data, retains zero rights to derive aggregate insights, and binds the vendor to delete inputs after a stated retention period.
+
+### 2. Material-change notification
+
+The vendor commits to notifying the customer **before** any material change to model, training data, or system prompt that affects production behaviour. Typical notice period: 30 days for behaviour-affecting changes, 7 days for safety-affecting changes.
+
+### 3. Sub-processor transparency
+
+The vendor maintains a list of sub-processors (other vendors they rely on), notifies the customer of additions, and is contractually responsible for sub-processor conformity.
+
+### 4. Audit rights
+
+The customer has the right to audit the vendor's AI governance documentation on reasonable notice — including the vendor's own AI policy, conformity-assessment files for vendor-provided high-risk systems, and incident logs touching customer data.
+
+### 5. Data-residency commitments
+
+For organisations subject to data-localisation rules, the contract names the regions in which data may be stored and processed. Cross-region transfers require explicit consent and (where applicable) standard-contractual-clauses coverage.
+
+### 6. Liability allocation
+
+The contract apportions liability for: regulator fines, customer claims arising from model behaviour, data-breach costs. Standard pattern: vendor caps liability at multiples of fees; customer carries residual risk; insurance picks up the gap. The cap matters — a 1× annual-fee cap on a 50k-EUR contract is meaningless against a 10M-EUR fine.
+
+### 7. Exit and portability
+
+On termination: data is returned in machine-readable format within a stated period, the vendor's copy is provably deleted, and any embeddings or fine-tuned weights derived from customer data are also returned or destroyed.
+
+## Three persona views
 
 <PersonaSection persona="exec">
-The procurement contract is where this work happens. Bake AI-specific clauses into your standard MSA before the next vendor renewal — retroactive amendments rarely succeed.
+The procurement contract is where this work happens. Bake AI-specific clauses into the standard MSA before the next vendor renewal — retroactive amendments rarely succeed.
+
+The leadership move that makes vendor governance real: a **named Vendor AI Governance owner** with sign-off authority on every new AI vendor contract above a stated spend threshold. Without that owner, AI-specific clauses get traded away in negotiation by procurement teams whose primary metric is contract velocity.
+
+Two numbers worth tracking quarterly:
+
+1. **Coverage rate.** What percentage of active AI vendors have AI-specific contract clauses in place? Target: 100 % within 18 months of programme launch.
+2. **Material-change notice rate.** What percentage of AI vendors actually sent material-change notifications in the period? If the answer is zero, either the vendors aren't changing (unlikely) or they aren't honouring the clause (likely).
 </PersonaSection>
 
 <PersonaSection persona="engineer">
 Build a vendor inventory at the system level, not the contract level. One vendor selling three products with three different model architectures requires three risk records.
+
+Technical patterns that work:
+
+- **A `vendors/` directory in the docs repo** with one YAML file per vendor-product, validated against a Zod schema.
+- **A CI gate** that fails the build if a new external API call appears in the codebase without a matching vendor-inventory entry.
+- **A monthly diff report** comparing the vendor inventory against the live infrastructure cost-allocation tags. Drift between the two reveals shadow-IT vendors that didn't go through governance review.
+
+For LLM-backed systems specifically:
+
+- Capture the **exact model name and version** in the inventory, including provider snapshot identifiers when available.
+- Re-record on every vendor-driven model upgrade — a "transparent upgrade" by the vendor is a material change for downstream classification.
+- Log the **system prompt** hash so changes can be tracked.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-EU AI Act Article 25(1) shifts you from deployer to provider when you substantially modify a high-risk system. Fine-tuning a third-party foundation model often crosses that line. Document the boundary explicitly.
+EU AI Act Article 25(1) shifts the organisation from deployer to provider when it substantially modifies a high-risk system. Fine-tuning a third-party foundation model often crosses that line. Document the boundary explicitly in a memo — assumption-by-silence is the worst position to defend in audit.
+
+The vendor due-diligence pack to request from every AI vendor before contract signature:
+
+1. The vendor's AI policy (or equivalent governance document).
+2. The vendor's conformity-assessment file for the specific product (if EU AI Act high-risk).
+3. The vendor's most recent independent security assessment (SOC 2 Type II or equivalent).
+4. A list of known incidents in the prior 12 months affecting the product.
+5. The vendor's data-protection policies for customer data handling.
+6. The vendor's sub-processor list.
+7. Evidence of bias-testing on the vendor's model with documented results.
+
+A vendor that cannot or will not provide items 1, 2, and 7 is signalling that the customer will inherit those obligations entirely. That signal is worth pricing into the procurement decision.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Densha Logistics Tokyo](/stories/densha-logistics/) uses a third-party route-optimisation model from a Singapore vendor. Their vendor contract requires 30 days' notice of any change to the model's training data or architecture. The notice triggers an internal risk-tier re-check (Stage 3).
+[Densha Logistics Tokyo](/stories/densha-logistics/) uses a third-party route-optimisation model from a Singapore vendor. Their vendor contract requires 30 days' notice of any change to the model's training data or architecture. The notice triggers an internal risk-tier re-check (Stage 3). When the vendor migrated from a transformer architecture to a graph neural network mid-2026, the 30-day notice gave Densha time to run a parallel evaluation, confirm performance was equivalent, and pre-authorise the cutover. Without the notice clause, the upgrade would have shipped silently.
+
+[Aurora Insurance London](/stories/aurora-insurance/) maintains a vendor inventory keyed by the procurement system's vendor ID, joined to the AI inventory by product code. Twice a year, an internal audit reconciles the two. The most recent reconciliation found three "AI features" enabled inside a non-AI vendor's product (an analytics platform that quietly added LLM-backed report-summarisation). The features had never been reviewed; the team disabled them pending a procurement-side risk review and a contract amendment to add AI-specific clauses.
+
+The lesson Aurora draws: **vendor product roadmaps add AI faster than procurement teams can re-paper contracts.** The reconciliation discipline is what catches it.
+
+## What "good" looks like
+
+Working third-party AI governance:
+
+- **Complete vendor inventory** with structured entries per product.
+- **AI-specific contract clauses** in every active AI vendor agreement.
+- **Quarterly reconciliation** of inventory against live infrastructure.
+- **Material-change-notice tracking** with an issue per notice received.
+- **Provider-status documentation** for every fine-tuned / white-labelled / repurposed vendor product.
+- **Vendor due-diligence pack** received and reviewed before contract signature.
+
+## What "bad" looks like
+
+- "We don't have any AI vendors" (almost always wrong — every modern SaaS has AI features somewhere).
+- Vendor list maintained only in procurement records, never reconciled against engineering.
+- Standard MSA used unchanged for AI vendors.
+- Fine-tuning happening without provider-status analysis.
+- No record of vendor-driven model upgrades.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-25" snapshot="2026-05-24" regulationName="EU AI Act">
 Any distributor, importer, deployer or other third-party shall be considered to be a provider of a high-risk AI system for the purposes of this Regulation and shall be subject to the obligations of the provider under Article 16, in any of the following circumstances: (a) they put their name or trademark on a high-risk AI system already placed on the market or put into service; (b) they make a substantial modification to a high-risk AI system that has already been placed on the market or has already been put into service.
 </RegQuote>
 
-**Why this matters:** the provider/deployer line determines who carries the conformity-assessment burden. Cross it accidentally and you inherit obligations you did not budget for.
+**Why this matters:** the provider/deployer line determines who carries the conformity-assessment burden. Cross it accidentally and the organisation inherits obligations it did not budget for.
 
----
+<RegQuote source="nist-ai-rmf" article="MANAGE-3" snapshot="2026-05-24" regulationName="NIST AI RMF">
+AI risks and benefits from third-party entities are managed.
+</RegQuote>
 
-Next: [Data Controls](/stages/06-data-controls/) — the substrate every AI system runs on.
+**Why this matters:** NIST AI RMF's MANAGE-3 is the catch-all for vendor-AI governance under the US voluntary framework. It is intentionally broad; operationalising it requires the seven-clause contract approach above.
+
+## Common pitfalls
+
+- **Treating "we just use the API" as a governance-free position.** API-only use still requires a vendor inventory entry, a risk classification, a data-flow document, and contract review.
+- **Skipping the provider-status analysis for fine-tuned models.** Fine-tuning is a substantial modification by default; the burden is on the team to show why it isn't.
+- **Negotiating AI-specific clauses out of contracts to close deals faster.** Every clause traded away is a future audit finding; the trade-off needs to be visible to the AI risk owner, not just to procurement.
+- **Forgetting about "AI features added later."** A vendor product reviewed and approved as non-AI in 2024 may add an LLM-backed feature in 2026 without re-reviewing. Reconciliation discipline (above) catches these.
+
+## What's next
+
+[Data Controls](/stages/06-data-controls/) covers the data-governance substrate that vendor contracts must constrain.

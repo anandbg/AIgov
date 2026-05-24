@@ -5,48 +5,132 @@ interface Props {
 const { currentStage } = Astro.props as Props;
 const wrapperClass = ['mermaid-journey', currentStage ? `current-S${currentStage}` : ''].filter(Boolean).join(' ');
 
-// Canonical (label, slug) pairs — slug must match the MDX filename under apps/site/src/content/docs/stages/.
-const stages: Array<{ label: string; slug: string }> = [
-  { label: '1. AI Policy',              slug: '01-ai-policy' },
-  { label: '2. Risk Tiering',           slug: '02-risk-tiering' },
-  { label: '3. Risk Check',             slug: '03-risk-check' },
-  { label: '4. Compliance',             slug: '04-compliance' },
-  { label: '5. Third-party AI Risk',    slug: '05-third-party-risk' },
-  { label: '6. Data Controls',          slug: '06-data-controls' },
-  { label: '7. Continuous Red-teaming', slug: '07-red-teaming' },
-  { label: '8. Documentation',          slug: '08-documentation' },
-  { label: '9. Accountability',         slug: '09-accountability' },
-  { label: '10. Agentic AI Oversight',  slug: '10-agentic-oversight' },
-  { label: '11. Incident Response',     slug: '11-incident-response' },
-  { label: '12. Monitoring',            slug: '12-monitoring' },
+const stages: Array<{ label: string; slug: string; id: string }> = [
+  { id: 'S1',  label: '1. AI Policy',              slug: '01-ai-policy' },
+  { id: 'S2',  label: '2. Risk Tiering',           slug: '02-risk-tiering' },
+  { id: 'S3',  label: '3. Risk Check',             slug: '03-risk-check' },
+  { id: 'S4',  label: '4. Compliance',             slug: '04-compliance' },
+  { id: 'S5',  label: '5. Third-party AI Risk',    slug: '05-third-party-risk' },
+  { id: 'S6',  label: '6. Data Controls',          slug: '06-data-controls' },
+  { id: 'S7',  label: '7. Continuous Red-teaming', slug: '07-red-teaming' },
+  { id: 'S8',  label: '8. Documentation',          slug: '08-documentation' },
+  { id: 'S9',  label: '9. Accountability',         slug: '09-accountability' },
+  { id: 'S10', label: '10. Agentic AI Oversight',  slug: '10-agentic-oversight' },
+  { id: 'S11', label: '11. Incident Response',     slug: '11-incident-response' },
+  { id: 'S12', label: '12. Monitoring',            slug: '12-monitoring' },
 ];
+
+const diagram = [
+  'flowchart LR',
+  '  S1[1. AI Policy] --> S2[2. Risk Tiering] --> S3[3. Risk Check] --> S4[4. Compliance]',
+  '  S4 --> S5[5. Third-party AI Risk] --> S6[6. Data Controls] --> S7[7. Continuous Red-teaming]',
+  '  S7 --> S8[8. Documentation] --> S9[9. Accountability] --> S10[10. Agentic AI Oversight]',
+  '  S10 --> S11[11. Incident Response] --> S12[12. Monitoring]',
+  ...(currentStage ? [`  style S${currentStage} fill:#4f46e5,stroke:#312e81,color:#ffffff`] : []),
+].join('\n');
 ---
 <div class={wrapperClass}>
-
-```mermaid
-flowchart LR
-  S1[1. AI Policy] --> S2[2. Risk Tiering] --> S3[3. Risk Check] --> S4[4. Compliance]
-  S4 --> S5[5. Third-party AI Risk] --> S6[6. Data Controls] --> S7[7. Continuous Red-teaming]
-  S7 --> S8[8. Documentation] --> S9[9. Accountability] --> S10[10. Agentic AI Oversight]
-  S10 --> S11[11. Incident Response] --> S12[12. Monitoring]
-```
+  <pre class="mermaid" data-mermaid-source>{diagram}</pre>
 
   <details class="mermaid-fallback">
     <summary>List view of the 12-stage journey</summary>
     <ol>
       {stages.map((s) => (
-        <li><a href={`/stages/${s.slug}/`}>{s.label}</a></li>
+        <li>
+          <a href={`/stages/${s.slug}/`} class={currentStage === parseInt(s.id.slice(1), 10) ? 'current' : ''}>{s.label}</a>
+          {currentStage === parseInt(s.id.slice(1), 10) && <span class="mermaid-here"> ← you are here</span>}
+        </li>
       ))}
     </ol>
   </details>
 </div>
 
+<script>
+  // astro-mermaid only transforms fenced mermaid blocks in .md/.mdx. Inside .astro
+  // components we drive mermaid client-side. Mermaid's render() returns trusted SVG;
+  // we use DOMParser to attach it as parsed DOM rather than via direct assignment.
+  import mermaid from 'mermaid';
+
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const initialTheme =
+    document.documentElement.dataset.theme === 'dark' ? 'dark' :
+    document.documentElement.dataset.theme === 'light' ? 'neutral' :
+    prefersDark ? 'dark' : 'neutral';
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: initialTheme,
+    securityLevel: 'strict',
+    flowchart: { curve: 'basis', useMaxWidth: true },
+  });
+
+  function adoptSvg(host: HTMLElement, svg: string): void {
+    // Parse the SVG string into a DOM Document; move the <svg> root into host.
+    // Avoids assigning to innerHTML.
+    const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
+    const svgEl = doc.documentElement;
+    while (host.firstChild) host.removeChild(host.firstChild);
+    host.appendChild(host.ownerDocument.importNode(svgEl, true));
+  }
+
+  async function renderAll() {
+    const blocks = document.querySelectorAll<HTMLPreElement>('pre.mermaid[data-mermaid-source]');
+    for (const block of blocks) {
+      if (block.dataset.mermaidRendered === 'true') continue;
+      try {
+        const src = block.textContent ?? '';
+        const id = 'm' + Math.random().toString(36).slice(2, 10);
+        const { svg } = await mermaid.render(id, src);
+        const host = document.createElement('div');
+        host.className = 'mermaid';
+        adoptSvg(host, svg);
+        block.replaceWith(host);
+        host.dataset.mermaidRendered = 'true';
+      } catch (err) {
+        console.error('mermaid render failed:', err);
+        block.dataset.mermaidError = String(err);
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { void renderAll(); });
+  } else {
+    void renderAll();
+  }
+</script>
+
 <style>
-  .mermaid-journey :global(svg) { max-width: 100%; height: auto; }
+  .mermaid-journey :global(.mermaid) {
+    margin: 16px 0;
+    text-align: center;
+  }
+  .mermaid-journey :global(.mermaid svg) {
+    max-width: 100%;
+    height: auto;
+  }
+  pre.mermaid[data-mermaid-source] {
+    font-family: var(--font-mono, ui-monospace);
+    font-size: 12px;
+    color: var(--sl-color-text-muted);
+    background: var(--sl-color-bg-sidebar);
+    padding: 12px;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre;
+  }
   .mermaid-fallback {
     margin-top: 12px;
     font-size: 14px;
     color: var(--sl-color-text-muted);
   }
   .mermaid-fallback ol { padding-left: 20px; }
+  .mermaid-fallback a.current {
+    font-weight: 700;
+    color: var(--sl-color-accent);
+  }
+  .mermaid-here {
+    color: var(--sl-color-accent);
+    font-weight: 600;
+  }
 </style>

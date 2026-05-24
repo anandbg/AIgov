@@ -24,39 +24,215 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-Monitoring is the always-on telemetry layer that feeds every other stage. Drift detection, fairness regression, latency outliers, refusal rates — these are the signals that decide whether the controls you built are still working.
+Monitoring is the always-on telemetry layer that feeds every other stage. <GlossaryTerm term="Drift" /> detection, fairness regression, latency outliers, refusal-rate spikes, kill-switch trips — these are the signals that decide whether the controls built in stages 1-11 are still working. Without them, the governance programme is a snapshot; with them, it's a system.
+
+This stage explains the four families of signals every AI system needs to emit, the dashboard structure that makes them readable, and how to turn the EU AI Act Article 72 post-market monitoring obligation into a real engineering practice.
 
 <MermaidJourney currentStage={12} />
 
-## What to actually monitor
+## The four signal families
 
-- **Quality signals** — accuracy on a calibrated holdout, refusal-rate stability, hallucination markers.
-- **Bias signals** — performance deltas across protected attributes; drift bounds.
-- **Operational signals** — latency, error rate, cost per request, rate of human escalations.
-- **Safety signals** — guardrail triggers, jailbreak attempts, kill-switch trips.
+Every production AI system needs to emit signals across four families. Coverage is the test — a system that only monitors latency and error rate is monitoring its infrastructure, not its AI behaviour.
+
+### 1. Quality signals
+
+What the model produced, evaluated against the criteria the model was supposed to meet:
+
+- **Accuracy on a calibrated holdout** — the same eval set used at launch, re-run in production at sampling rate
+- **Refusal-rate stability** — for LLM-backed systems, the rate at which the model refuses requests should be stable; a sudden change means either the input distribution shifted or the model's behaviour did
+- **Hallucination markers** — for RAG systems, the rate at which the model produces content not grounded in the retrieved sources
+- **Citation precision** — fraction of citations in model output that actually support the cited claim
+- **Output-format adherence** — for systems with structured outputs, the rate at which the output is parseable
+
+Quality signals are evaluated against a **calibrated baseline**. The baseline is established at launch and updated only via the risk-check process (Stage 3) — never silently adjusted to mask drift.
+
+### 2. Fairness signals
+
+Performance variance across protected attributes:
+
+- **Per-attribute metric slices** — accuracy / precision / recall / refusal-rate by sex, race, age, disability (and other attributes where lawful to measure)
+- **Drift bounds** — the maximum acceptable widening of the gap between best- and worst-served groups
+- **Threshold for "significant variance"** that triggers a Risk Check (Stage 3)
+
+Fairness signals require that the production data be **slice-able** by protected attribute. For systems where protected-attribute data is not stored (often because of GDPR minimisation principles), proxy metrics or external benchmarks substitute — with the caveat documented in the model card.
+
+### 3. Operational signals
+
+The infrastructure-side metrics that determine whether the system is operating at all:
+
+- **Latency distribution** (p50, p95, p99) — outliers often signal a quality problem (a slow response from the LLM provider may produce truncated output)
+- **Error rate** — provider errors, validation failures, timeout escalations
+- **Cost per request** — for LLM-backed systems, the per-request token cost; sudden spikes signal prompt-engineering regression or input-distribution drift
+- **Rate of human escalations** — for systems with human-in-the-loop, the fraction of sessions that escalated to a human
+- **Throughput** — sessions per minute, peak vs sustained
+
+### 4. Safety signals
+
+The guardrail-and-kill-switch layer:
+
+- **Guardrail triggers** — count and category of inputs/outputs that hit a guardrail
+- **Jailbreak attempts** — count and pattern of inputs matching known prompt-injection signatures
+- **Kill-switch trips** — count and rationale per trip
+- **Tool-call rejections** — for agentic systems, the count of tool calls rejected by the allowlist
+- **Action-budget breaches** — sessions that hit a per-session or per-day budget cap
+
+Safety signals are the bridge between [Continuous Red-teaming](/stages/07-red-teaming/) (catalogues the known-bad inputs) and [Incident Response](/stages/11-incident-response/) (responds when bad signals appear in production).
+
+## The dashboard structure
+
+A working monitoring dashboard has three layers:
+
+### Layer 1: Per-system summary (one card per system)
+
+The card shows current vs baseline for the headline signal of each family. At-a-glance:
+
+```
+┌─ clinical-summary-model v2.3.1 ─────────────────────────┐
+│ Quality:     accuracy 89.2 % (baseline 89.0 ± 1.5)  ✓  │
+│ Fairness:    max group gap 4.1 % (threshold 6.0)    ✓  │
+│ Operational: p95 latency 1.8s (SLO 2.5s)            ✓  │
+│ Safety:      guardrail trips 14/day (baseline 8-20) ✓  │
+└─────────────────────────────────────────────────────────┘
+```
+
+A red signal on any family raises an alert and triggers the incident-response flow.
+
+### Layer 2: Drill-down per-signal-family
+
+When a signal goes red, the drill-down shows the time-series, the per-slice breakdown, the recent changes that might explain it, and the responsible engineer.
+
+### Layer 3: Aggregate / portfolio view
+
+Across all AI systems in the organisation:
+
+- Number of systems at each tier (high-risk / limited-risk / minimal-risk)
+- Aggregate incident rate per month
+- Aggregate cost per month
+- Open-finding count from red-team (Stage 7)
+- Open risk-check backlog (Stage 3)
+
+The aggregate view is what the AI Risk Owner reviews weekly and the board AI sub-committee reviews monthly.
+
+## The signal-to-alert pipeline
+
+Not every signal is an alert. The pipeline:
+
+1. **Signal emitted** by the system into the metrics store.
+2. **Baseline computed** from the historical distribution (often a rolling 30-day window after a launch settling period).
+3. **Threshold check** against the baseline. Thresholds are signal-specific:
+   - Quality: drift beyond N standard deviations of the baseline
+   - Fairness: per-attribute gap widening beyond declared bound
+   - Operational: SLO breach (latency, error rate)
+   - Safety: anomaly relative to the recent rolling window
+4. **Alert** if threshold breached, routed to the named on-call.
+5. **Triage**: confirm, classify (S0-S3 per Stage 11), respond.
+
+Alerts that fire repeatedly without action become **alert fatigue**, which is itself a governance risk — the most expensive failure mode in monitoring. Tuning thresholds + suppressing duplicates is part of the SRE's recurring work.
+
+## Three persona views
 
 <PersonaSection persona="exec">
-Monitoring is the operating-budget line item that scales with system count. Pre-buy the storage and alert capacity before launching the third high-risk system.
+Monitoring is the operating-budget line item that scales with system count. Pre-buy the storage and alert capacity before launching the third high-risk system; retroactive capacity expansion is more expensive than the headroom.
+
+Realistic budget shape:
+
+- **Metrics storage**: a few cents per system per day at typical volumes (using a managed service); a few dollars per system per day for high-volume systems.
+- **Dashboard engineering**: a few engineer-weeks upfront to build the per-system + portfolio dashboards; few engineer-days per quarter to maintain.
+- **On-call rotation**: shared with general SRE rotation for most organisations; dedicated AI on-call for organisations operating multiple high-risk systems.
+- **Alert tuning**: a recurring 0.5-1 engineer-day per week. Real work, not bonus work — alert fatigue is the leading cause of missed incidents.
+
+The board-level metric to track quarterly: **alert coverage**. What fraction of historical S1+ incidents would have been caught by current monitoring if it had been in place? Backtest against known incidents. Coverage below 80 % is a programme-maturity flag.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
-Treat the monitoring dashboard as a contract: every signal in production should have a documented owner, threshold, and pager destination. Signals with no owner get muted within a quarter.
+Treat the monitoring dashboard as a contract: every signal in production should have a documented owner, threshold, and pager destination. Signals with no owner get muted within a quarter; signals with no threshold accumulate noise that no one reads.
+
+Patterns that work:
+
+- **Signals defined in code**, version-controlled. A `monitoring/signals.yaml` per system declaring metric, baseline-window, threshold, owner-role, severity-on-breach.
+- **A CI gate** that fails any change to `signals.yaml` without the AI Risk Owner's review (Stage 9 RACI).
+- **A backtest harness** that replays historical traffic against new thresholds before they land in production. Catches the "this threshold would have alerted 47 times yesterday" issue at definition time.
+- **A "last alerted" timestamp** per signal, surfaced in the dashboard. A signal that hasn't fired in 6 months is either silently broken or correctly configured; review both possibilities annually.
+
+For LLM-backed systems specifically:
+
+- **Log every input, output, and tool call** to the audit-log sink (Stage 10). Don't sample for compliance reasons; do sample for cost reasons separately at the analytics layer.
+- **Compute hallucination markers** offline against a sample. Continuously-running grounding checks on every output are too expensive; sample 1-5 % per category continuously.
+- **Drift detection on the input-embedding distribution** as the canary for "the use-case has shifted." A drifting input distribution is the upstream signal for an eventual quality regression.
+
+The infra to budget: a metrics-emit path that is **always-on at full sample**. Throwing away signals to save infrastructure cost reintroduces the exact monitoring gap the programme exists to close.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-Article 72 post-market monitoring obligations are usually satisfied by reusing your existing observability stack with AI-specific signals. Document the mapping — auditors look for the explicit thread.
+EU AI Act Article 72 post-market monitoring obligations are usually satisfied by reusing the existing observability stack with AI-specific signals layered on. Document the mapping explicitly — auditors look for the thread.
+
+The Article 72 documentation per high-risk system:
+
+1. **Post-market monitoring plan** (filed in the conformity-assessment file Section 9, see Stage 4 + 8).
+2. **The actual signals being collected** — mapped to the plan.
+3. **The data analysis** — periodic reports turning the raw signals into trend analyses.
+4. **The actions taken** — when a signal threshold was breached, what happened.
+5. **The communications** — Art. 72(2) requires the post-market data to inform interactions with market surveillance authorities; document the channel.
+
+For NIST AI RMF organisations, MEASURE-1 (appropriate methods and metrics) and MANAGE-4 (response and recovery) are the cross-references. The dual-citation framing (Art. 72 + MEASURE-1) reads well to auditors familiar with either framework.
+
+The audit failure mode to avoid: **a post-market monitoring plan that describes signals the team isn't actually collecting**. The plan and the reality must match; the mismatch is more damaging than an honestly-narrower plan.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Acme Robotics US](/stories/acme-robotics/) routes warehouse-navigation telemetry through their existing Datadog account, with AI-specific dashboards for collision-avoidance refusal rate, route-deviation distribution, and human-takeover frequency. Anomaly detection on the takeover-frequency signal is the primary trigger for an unscheduled risk check.
+[Acme Robotics US](/stories/acme-robotics/) routes warehouse-navigation telemetry through their existing Datadog account, with AI-specific dashboards for collision-avoidance refusal rate, route-deviation distribution, and human-takeover frequency. Anomaly detection on the takeover-frequency signal is the primary trigger for an unscheduled risk check (Stage 3) — when human operators take over the robot more than 1.5× the baseline rate, the risk-check issue auto-files.
+
+Their portfolio view tracks four metrics weekly: number of S1+ incidents in the period, average time-to-detect across those incidents, open red-team findings, and open risk-check backlog. The four numbers go in the weekly leadership update; trends drive resourcing decisions for the quarter.
+
+[Sigma Health Berlin](/stories/sigma-health/) operates under the EU AI Act + medical-device regime, so their monitoring stack is heavier. Their Article 72 post-market monitoring plan integrates with the medical-device vigilance system; a serious clinical incident triggers both the EU AI Act Art. 73 notification and the MDR vigilance reporting in parallel.
+
+Their dashboard headline metric is **clinician-acceptance rate** — what fraction of summaries are accepted by the reviewing clinician without substantive edits. A drop in acceptance rate is the leading indicator for content-quality drift, more reliable than direct accuracy metrics (which require ground-truth labels that arrive with lag).
+
+[Aurora Insurance London](/stories/aurora-insurance/) operates under FCA Consumer Duty obligations on top of UK GDPR + EU AI Act extraterritorial reach. Their fairness-signal dashboard slices outputs by sex, age, region, and ethnicity (where lawfully measurable via proxy). When a slice's adverse-impact ratio drifts beyond the threshold declared in the model card, the alert fires and an investigation opens with a 14-day SLA.
+
+## What "good" looks like
+
+A working monitoring programme:
+
+- **Four signal families** (quality, fairness, operational, safety) covered per system.
+- **Per-system summary dashboards** + drill-down + portfolio view.
+- **Baselines calibrated at launch**, updated only via risk-check.
+- **Alerts owned by named role**, with documented response procedure.
+- **Backtest discipline** for new thresholds before they go live.
+- **Post-market monitoring plan** in the conformity-assessment file matches the actual signals.
+- **Aggregate metric tracked** at the AI Risk Owner level (alert coverage, S1+ incident rate, open backlog).
+
+## What "bad" looks like
+
+- Only operational signals monitored (latency, errors) — AI-specific signals absent.
+- No baseline — alerts based on absolute thresholds that wander out of date.
+- Alerts owned by "the team" — no one accountable on call.
+- Post-market plan documented but signals never wired up.
+- Alert fatigue: a handful of signals fire daily, on-call mutes the noise, real signals get lost.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-72" snapshot="2026-05-24" regulationName="EU AI Act">
 Providers of high-risk AI systems shall establish and document a post-market monitoring system in a manner that is proportionate to the nature of the artificial intelligence technologies and the risks of the high-risk AI system. The post-market monitoring system shall actively and systematically collect, document and analyse relevant data which may be provided by deployers or which may be collected through other sources on the performance of high-risk AI systems throughout their lifetime.
 </RegQuote>
 
-**Why this matters:** the difference between a governance programme that produces evidence and one that produces theatre is whether monitoring signals actually feed back into risk check and policy.
+**Why this matters:** "actively and systematically collect, document and analyse" is a three-part obligation. Collect (the signals exist), document (the plan describes them), analyse (the reports turn raw signals into trend analyses). Missing any of the three is a partial implementation that fails Art. 72.
 
----
+<RegQuote source="nist-ai-rmf" article="MEASURE-1" snapshot="2026-05-24" regulationName="NIST AI RMF">
+Appropriate methods and metrics are identified and applied. The AI system's measurable performance criteria are documented and assessed before deployment and updated throughout the AI lifecycle.
+</RegQuote>
 
-That closes the journey. Return to [AI Policy](/stages/01-ai-policy/) and the policy artefact you started with — Monitoring is what tells you whether that document is still describing the system it was meant to govern.
+**Why this matters:** NIST MEASURE-1 frames monitoring as a lifecycle activity, not a launch-day exercise. The "updated throughout the AI lifecycle" phrasing requires the recurring discipline this stage describes.
+
+## Common pitfalls
+
+- **Monitoring only the infrastructure layer.** Latency and error rate alone do not catch AI-specific failure modes. The four-family coverage is the test.
+- **Hard-coded thresholds that ignore the input distribution.** A 92 % accuracy threshold made sense when the input distribution was one shape; the input has shifted; the threshold no longer makes sense.
+- **Owning alerts by team, not by role.** Diffuse ownership produces no-one-acted incidents.
+- **Sampling out the audit log to save cost.** Compliance evidence requires full logs; sampling at the analytics layer is fine but the underlying log must be complete.
+- **Skipping the post-market monitoring plan refresh** when the system changes. Stage 3 (Risk Check) should trigger a Stage 12 plan review.
+
+## Closing the loop
+
+That closes the 12-stage journey. Return to [AI Policy](/stages/01-ai-policy/) and the policy artefact you started with — Monitoring is what tells you whether that document is still describing the system it was meant to govern. The journey is a loop, not a line: monitoring signals feed back into risk checks, which can trigger tier reclassifications, which can amend the policy. The discipline is keeping the loop running, not arriving at a destination.

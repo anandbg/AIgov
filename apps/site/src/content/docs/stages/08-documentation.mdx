@@ -23,39 +23,187 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-Documentation is the unglamorous spine of <GlossaryTerm term="AI governance" />. Every other stage produces evidence; this stage organises and maintains it so the next team finds it.
+Documentation is the unglamorous spine of <GlossaryTerm term="AI governance" />. Every other stage produces evidence; this stage organises and maintains it so the next team — the next reviewer, the next regulator, the next on-call engineer at 2am — can find what they need without paging the person who built the system.
+
+This stage explains the four core documentation artefacts, the generation patterns that keep them current, and the discipline that makes documentation a build output rather than a quarterly fire-drill.
 
 <MermaidJourney currentStage={8} />
 
-## What you actually maintain
+## The four core artefacts
 
-- **Model cards** for every production model, kept in git next to the model artefact.
-- **Datasheets** for every training/validation/testing dataset.
-- **Conformity-assessment file** (EU AI Act Annex IV) per high-risk system.
-- **Change logs** — who changed what, when, why.
+Every AI system in production needs four documents, regardless of regime:
+
+### 1. Model card
+
+A one-page (sometimes two-page) summary of a specific model version covering:
+
+- **Intended use** — the use-cases the model is designed for
+- **Out-of-scope use** — explicit list of use-cases the model is **not** designed for
+- **Performance metrics** — accuracy / precision / recall / F1 / refusal rate, with per-protected-attribute slices
+- **Limitations and known failure modes** — including red-team findings (Stage 7)
+- **Training data summary** — sources, volumes, time-range, licence basis
+- **Architecture summary** — base model, fine-tuning approach, parameter count
+- **Evaluation methodology** — what was measured, how, on what data
+- **Maintenance and ownership** — named owner role, review cadence, contact
+
+The model card is the artefact a new engineer reads first to understand "what is this thing." It is the artefact a customer asks for before integrating. It is the artefact a regulator samples first.
+
+### 2. Datasheet
+
+A counterpart to the model card, but for a dataset. Covers:
+
+- **Motivation** — why was this dataset assembled, who funded it
+- **Composition** — what is in it, what is the unit of analysis, how many records
+- **Collection process** — how were data points obtained, when, by whom
+- **Preprocessing** — what cleaning / labelling / transformation was applied
+- **Licence and access** — what licence governs, who can access
+- **Recommended uses** — what use-cases the dataset is appropriate for
+- **Discouraged uses** — what use-cases it is **not** appropriate for
+- **Distribution** — known biases, representativeness analysis
+
+The original "Datasheets for Datasets" paper (Gebru et al., 2018) defined the template. Every major framework has since adopted some variant.
+
+### 3. Conformity-assessment file (EU AI Act high-risk only)
+
+The Annex IV bundle covered in detail in Stage 4. Combines and extends the model card + datasheet + risk-management evidence + monitoring plan + declaration of conformity into a single audit-ready artefact.
+
+### 4. Change log
+
+A dated record of what changed, when, why, by whom. Covers:
+
+- Model version changes (including silent retrains)
+- Training-data changes
+- System-prompt changes
+- Tool allowlist changes (for agentic systems)
+- Vendor-driven upstream changes
+- Risk-tier classification changes
+- Policy / governance changes
+
+Generated from `git log` between releases for systems that follow git-as-source-of-truth. Manually curated where git-derived entries need narrative summarisation.
+
+## The generation pattern that survives
+
+Hand-authored documentation rots within one release cycle. **Documentation that lasts is generated from build outputs.** The pattern:
+
+1. The training pipeline emits **structured metadata** (training-run config, dataset hashes, hyperparameters, evaluation results) into a known location alongside the model weights.
+2. A **render script** turns the structured metadata into the model card template's fillable fields. The hand-authored fields (intended use, limitations narrative, recommended-use guidance) live in a separate file that the render script merges in.
+3. The render script runs as part of CI on every successful training pipeline. Output is committed to the docs repo automatically.
+4. A **review gate** ensures a human approves the hand-authored field updates before the model card is published.
+
+The split between generated and hand-authored is the key insight: the regenerable fields stay accurate by construction; the human-judgement fields stay current via the review gate.
+
+## Three persona views
 
 <PersonaSection persona="exec">
-Documentation rot is the most expensive technical debt category in AI governance because regulators read it backwards from incidents. Budget continuous maintenance, not point-in-time updates.
+Documentation rot is the most expensive technical-debt category in AI governance because regulators read it backwards from incidents. When something goes wrong, the first question is "what did the documentation say at the time?" If the documentation says one thing and the system does another, the gap becomes the centre of the inquiry.
+
+Budget continuous maintenance, not point-in-time updates. The realistic cost of generated documentation:
+
+- Build the templates and render scripts: **2-4 engineer-weeks** as an upfront investment.
+- Per-model recurring cost: **near-zero** — the documentation regenerates automatically.
+- Per-quarter human-authored update: **0.5-1 engineer-days** for narrative sections.
+
+Compared to the manual alternative (one engineer-week per model per quarter), the generation approach pays back within two quarters and continues paying forward.
+
+The leadership move: a **deployment-blocking CI gate** that requires the documentation regeneration step to have succeeded. Without the gate, the engineering team will skip the regeneration on busy weeks; with it, the documentation cannot drift.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
 Generate documentation from build artefacts where possible. Model cards keyed off pipeline metadata stay accurate; hand-written model cards lie within a release cycle.
+
+Practical patterns:
+
+- **`training-run-manifest.json`** emitted by the trainer with: model architecture, base-model identifier, training-data hash, hyperparameters, runtime config.
+- **`evaluation-report.json`** emitted by the eval harness with: per-metric scores, per-protected-attribute slices, confidence intervals.
+- **`hand-authored.md`** committed to the model's directory with: intended-use, out-of-scope, limitations narrative, recommended-use.
+- **`render-model-card.mjs`** that combines all three into a templated model card and writes to `docs/models/<model-id>/<version>/model-card.md`.
+
+The CI rule: any commit that changes `training-run-manifest.json` or `evaluation-report.json` must also produce an updated model card. A `make docs` step or equivalent runs in CI; the resulting diff is part of the PR.
+
+For agentic systems, generate the **tool allowlist** as part of the same artefact bundle so the model card includes the current tool surface, not a stale list from launch.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-Annex IV of the EU AI Act is the canonical structure for high-risk documentation. Adopt the section headings even for non-high-risk systems — auditors recognise the shape.
+Annex IV of the EU AI Act is the canonical structure for high-risk technical documentation. Adopt the section headings even for non-high-risk systems — auditors recognise the shape and treat it as evidence of maturity.
+
+The model card and datasheet sit **inside** the Annex IV file for high-risk systems (sections 2 and 4 specifically). They also exist as standalone artefacts for non-high-risk systems, where Annex IV isn't required.
+
+The audit failure mode to avoid: **documentation that has the right structure but stale content.** A model card with a section labelled "Performance metrics" containing numbers from two model versions ago is worse than no model card, because it actively misleads. The generation discipline above prevents this.
+
+Cross-reference is everything. Each document should link to:
+
+- The AI policy (Stage 1) that authorised this category of system
+- The risk-tier rationale (Stage 2) that classified it
+- The most recent risk check (Stage 3)
+- The data-controls register (Stage 6) for the datasets it consumes
+- The red-team findings log (Stage 7) for the model
+- The incident-response runbook (Stage 11) that owns it
+- The monitoring dashboard (Stage 12) where its health lives
+
+Documentation as a connected graph, not a pile of standalone files.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Acme Robotics US](/stories/acme-robotics/) auto-generates model cards via a CI job that runs on every successful training pipeline. The job pulls metadata from the training run plus a hand-curated "limitations and intended use" block reviewed by their AI ethics lead.
+[Acme Robotics US](/stories/acme-robotics/) auto-generates model cards via a CI job that runs on every successful training pipeline. The job pulls metadata from the training run plus a hand-curated "limitations and intended use" block reviewed by their AI ethics lead. The output lives at `docs/models/<model-id>/<version>/model-card.md`. Every release tag freezes a copy.
+
+The hand-authored block uses a small templated structure:
+
+```yaml
+intended_use: |
+  ...
+out_of_scope_use: |
+  ...
+known_limitations:
+  - id: collision-low-light
+    description: "..."
+    mitigation: "..."
+```
+
+The structure means changes to the hand-authored block are reviewable as diffs (every limitation is its own entry; adding or modifying one is visible in the PR).
+
+[Sigma Health Berlin](/stories/sigma-health/) takes documentation a step further: their Annex IV conformity-assessment file is **assembled by a build step** from the constituent artefacts (model card, datasheet, evaluation report, risk-management activities log, change log, declaration of conformity). The assembly script ensures every Annex IV section has content; missing sections fail the build. The notified body has commented that this is the cleanest Annex IV evidence they review across their clients.
+
+## What "good" looks like
+
+A working documentation programme:
+
+- **Model card per production model version**, generated from training pipeline metadata.
+- **Datasheet per training dataset**, generated from data pipeline manifest.
+- **Conformity-assessment file** (Annex IV) for high-risk systems, assembled from constituent artefacts.
+- **Change log** generated from git log between releases, narratively summarised where needed.
+- **CI gate** that fails if any required document is older than the artefact it documents.
+- **Review gate** for hand-authored sections — limitations narrative, intended-use updates.
+
+## What "bad" looks like
+
+- A model card committed at launch and never updated.
+- A "documentation backlog" issue that has been open for 18 months.
+- Documentation living on a wiki that no one reads.
+- Conformity-assessment file maintained as a separate Word document with no link to the engineering artefacts.
+- Change log that says "various improvements" without naming what changed.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-11" snapshot="2026-05-24" regulationName="EU AI Act">
 The technical documentation of a high-risk AI system shall be drawn up before that system is placed on the market or put into service and shall be kept up-to-date. The technical documentation shall be drawn up in such a way as to demonstrate that the high-risk AI system complies with the requirements set out in this Section.
 </RegQuote>
 
-**Why this matters:** documentation is the regulator's primary investigative surface. Make it generated, make it dated, make it diff-able.
+**Why this matters:** "kept up-to-date" is the failure mode. Audits find documentation that was drawn up correctly but never maintained. The generation pattern above is the operational answer.
 
----
+<RegQuote source="iso-iec-42001" article="Clause-7.5" snapshot="2026-05-24" regulationName="ISO/IEC 42001">
+The organization shall determine the documented information required by the AI management system. Documented information shall be appropriately identified, described, formatted, reviewed and approved for suitability, and controlled to ensure it is available where needed and adequately protected.
+</RegQuote>
 
-Next: [Accountability](/stages/09-accountability/) — the named owners of every control.
+**Why this matters:** ISO/IEC 42001 Clause 7.5 is the management-system anchor for documentation control. It applies the same control framework to AI documentation that ISO 9001 applies to quality documentation: identified, reviewed, approved, controlled.
+
+## Common pitfalls
+
+- **Hand-authoring everything.** Hand-authored documents rot. Generate the regenerable parts.
+- **Generating everything.** Without human review on the narrative sections, the limitations list becomes a copy of the training error log — accurate but uninterpretable.
+- **Treating model cards as marketing.** A model card written for the website's "trust" page reads differently from one written for an auditor. The auditor's version is the operative one; the public-facing summary is a derivative.
+- **Skipping the cross-references.** Documentation without internal links is a pile, not a system. The links are what make it navigable.
+
+## What's next
+
+Documentation is the artefact layer. [Accountability](/stages/09-accountability/) names the humans responsible for it — and for every other control.

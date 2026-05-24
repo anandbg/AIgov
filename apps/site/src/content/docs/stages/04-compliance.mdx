@@ -24,43 +24,192 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-Compliance is the stage where the AI policy and the assigned risk tier translate into concrete artefacts an auditor can examine: data-governance records, technical documentation, transparency notices, human-oversight procedures.
+Compliance is the stage where the AI policy and the assigned risk tier translate into concrete artefacts an auditor can examine: data-governance records, technical documentation, transparency notices, human-oversight procedures, conformity-assessment files. This is where written commitments become evidence.
+
+This stage walks through the seven control families that show up across the major frameworks, what each one actually produces as an artefact, and how to keep the evidence maintained instead of stale.
 
 <MermaidJourney currentStage={4} />
 
-## What compliance ships
+## The seven control families
 
-For high-risk EU AI Act systems, the conformity-assessment file is the deliverable. It contains:
+The EU AI Act, NIST AI RMF, and ISO/IEC 42001 all cover the same underlying control surface, organised differently. The seven families below are the cross-walk:
 
-- A data-governance record (Art. 10) — lineage, bias evaluation, quality criteria
-- Technical documentation (Art. 11 + Annex IV) — design, architecture, validation results
-- Transparency information for deployers (Art. 13)
-- Human-oversight procedures (Art. 14)
+### 1. Data governance (Art. 10 / Annex A.7 / MAP-2)
 
-For voluntary frameworks like NIST AI RMF, the equivalent artefact is the AI risk profile organised across Govern / Map / Measure / Manage.
+Evidence: dataset inventory, source provenance, licence registers, bias-evaluation reports per protected attribute, retention schedules.
+
+What changes by tier: high-risk systems need quality criteria attestation (Art. 10(2)) that examined relevance, representativeness, freedom-from-errors, and statistical properties relevant to the intended use. Limited-risk systems need lineage only.
+
+### 2. Technical documentation (Art. 11 + Annex IV / Annex A.10 / GOVERN-1.4)
+
+Evidence: the conformity-assessment file. Annex IV lists nine mandatory sections covering general description, design specifications, monitoring procedures, performance metrics, risk-management activities, lifecycle changes, compliance with harmonised standards, EU declaration of conformity, and post-market monitoring plan.
+
+High-risk only. Limited-risk systems need a much lighter "model card + datasheet + risk-tier rationale" bundle.
+
+### 3. Transparency obligations (Art. 13 + Art. 50 / Annex A.6 / GOVERN-4)
+
+Evidence: user-facing notices, system descriptions, instructions for use.
+
+Two flavours: deployer-facing (Art. 13 — what the deployer needs to know to operate the system safely) and user-facing (Art. 50 — what the natural person interacting with the system must be told). They serve different audiences and read differently.
+
+### 4. Human oversight (Art. 14 / Annex A.9 / GOVERN-3)
+
+Evidence: oversight procedures, training records for the assigned humans, kill-switch test logs, override-rate metrics.
+
+High-risk only at the EU AI Act level, but treated as best practice across NIST + ISO.
+
+### 5. Accuracy, robustness, cybersecurity (Art. 15 / Annex A.8 / MEASURE-2 + MANAGE-4)
+
+Evidence: evaluation reports, robustness-test results, red-team findings, vulnerability scans, penetration-test reports.
+
+This is where the [Continuous Red-teaming](/stages/07-red-teaming/) stage feeds directly into compliance evidence.
+
+### 6. Record-keeping (Art. 12 / Annex A.5 / GOVERN-1)
+
+Evidence: log-retention policies, log samples demonstrating coverage, log-integrity attestation.
+
+Often the cheapest control to add and the first one audited.
+
+### 7. Conformity assessment + CE marking (Art. 43, 47, 48 / certification scope / external)
+
+Evidence: completed assessment file, declaration of conformity, CE mark, notified-body certificate (where applicable).
+
+High-risk Annex I systems usually need notified-body assessment; Annex III systems usually self-assess (Art. 43(2)) — with the notable exception of biometric identification systems.
+
+## The conformity-assessment file in detail
+
+For high-risk EU AI Act systems, the conformity-assessment file is the operational deliverable. Annex IV defines its structure:
+
+1. **General description.** Intended purpose, providers' identity, deployment context.
+2. **Detailed description.** Architecture, key design choices, computational resources, datasets used.
+3. **Design and verification.** Logic, assumptions, foreseeable misuse, risk-management activities (Art. 9).
+4. **Performance metrics.** Accuracy, robustness, fairness — including limitations.
+5. **Monitoring, control, post-market plans.** How the system is supervised in production.
+6. **Lifecycle changes.** Provider-initiated changes, change-control governance.
+7. **List of harmonised standards applied.** ISO/IEC 42001, ISO/IEC 5259, etc.
+8. **Copy of the EU declaration of conformity.** A document signed by the provider attesting compliance.
+9. **Post-market monitoring plan.** The Art. 72 obligation made operational.
+
+The file is **drawn up before market placement** and **kept up-to-date** thereafter (Art. 11(1)). The most common deficiency in audit is section 9 — the post-market monitoring plan exists but doesn't match the system's actual operating reality.
+
+## Treating compliance evidence as a build artefact
+
+The single biggest sustainable practice in this stage is **generating compliance evidence from build outputs** rather than hand-authoring it.
+
+- **Model card** generated by the training pipeline from training-run metadata.
+- **Datasheet** generated from the data-ingestion pipeline manifest.
+- **Evaluation report** generated by the evaluation harness as part of CI.
+- **Risk-management activities log** generated from issue-tracker entries tagged `risk`.
+- **Change log** generated from `git log` between releases.
+
+What remains hand-authored: the "intended purpose," the "foreseeable misuse" analysis, the "limitations and considerations" narrative. These are the parts that need human judgement; the structural scaffolding around them is generated. The split keeps the document accurate without becoming impossible to maintain.
+
+## Three persona views
 
 <PersonaSection persona="exec">
-Compliance is the line item that scales linearly with the number of high-risk systems you operate. Budget per-system, not per-organisation.
+Compliance is the line item that scales linearly with the number of high-risk systems operated. Budget per-system, not per-organisation. The realistic cost of authoring a full conformity-assessment file from scratch for a high-risk system is 4-8 person-weeks; maintaining it thereafter is 1-2 person-days per quarter if the build-artefact approach is in place, or 1-2 person-weeks per quarter if not.
+
+The expensive failure mode is **letting compliance become a separate workstream from engineering**. When the documentation team operates downstream of engineering with hand-offs and quarterly sync meetings, the documents are wrong within one release. When compliance evidence is generated from the same CI pipeline that ships the code, the documents are right by construction.
+
+Two leadership decisions decide which path the organisation takes:
+
+1. Does the AI risk owner have authority to require compliance-evidence generation as a release-blocking check? If yes, evidence stays current. If no, it doesn't.
+2. Is there a budget for the platform work to make evidence generation cheap? A one-time investment in templated generators pays back in audit cycles.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
 Treat the technical documentation as a living artefact, generated where possible from model cards and pipeline metadata. Hand-written documentation rots within one release cycle.
+
+Practical patterns that work:
+
+- **Model card emitted by the training pipeline.** The training run already knows the dataset hashes, the architecture, the hyperparameters, the evaluation results. A small script renders those into a model card template and commits it next to the model weights.
+- **Datasheet emitted by the data-ingestion pipeline.** Same idea: the ingestion pipeline knows the source URI, fetch timestamp, licence string, row count, schema fingerprint. Emit those into a datasheet automatically.
+- **Annex IV file assembled at release time.** The release script pulls the model card, datasheet, evaluation report, and change log; concatenates them into the Annex IV structure; opens a PR for the AI risk owner to review the human-authored sections.
+
+The CI gate to add: a `compliance-check` job that fails if the conformity-assessment file is older than the latest model artefact. Forces the regeneration step before deployment.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-Article 11 + Annex IV is the canonical structure for high-risk technical documentation. Map your existing model-card schema to its sections before authoring fresh prose.
+Article 11 + Annex IV is the canonical structure for high-risk technical documentation. Map the existing model-card schema to its sections before authoring fresh prose — the auditor will check that every Annex IV section is addressed, not that the document follows Annex IV's section order.
+
+Crosswalk the Annex IV sections against ISO/IEC 42001 Annex A controls:
+
+| Annex IV section | 42001 Annex A control |
+|---|---|
+| §1 General description | A.6.2.2 AI system scope |
+| §2 Detailed description | A.10.2 AI system documentation |
+| §3 Design + verification | A.6.2.6, A.8.2 |
+| §4 Performance metrics | A.8.3 measurement |
+| §5 Monitoring + control | A.9.3 oversight; A.8.4 monitoring |
+| §6 Lifecycle changes | A.10.3 change management |
+| §7 Harmonised standards | A.6.2.3 |
+| §8 Declaration of conformity | (no direct 42001 analogue — EU AI Act-specific) |
+| §9 Post-market monitoring | A.8.4 |
+
+A single artefact that satisfies both regimes saves authoring time and reduces internal contradiction. For organisations subject only to NIST AI RMF, the equivalent rollup is the AI risk profile organised across Govern / Map / Measure / Manage.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Sigma Health Berlin](/stories/sigma-health/) maintains their conformity assessment as a git-tracked Markdown bundle. Each release tag produces a frozen PDF; the canonical source is reviewed monthly by their notified body.
+[Sigma Health Berlin](/stories/sigma-health/) maintains their conformity-assessment file as a git-tracked Markdown bundle in a private repo: `compliance/clinical-summary-model/v2.3.1/conformity-assessment.md`. Each release tag produces a frozen PDF; the canonical source is reviewed monthly by their notified body during the active certification cycle.
+
+The structure of their repo:
+
+```
+compliance/clinical-summary-model/
+├── v2.3.0/
+│   ├── conformity-assessment.md   # Annex IV bundle
+│   ├── model-card.md              # generated from training run
+│   ├── datasheet.md               # generated from data pipeline
+│   ├── evaluation-report.md       # generated from eval harness
+│   ├── risk-management-log.md     # generated from issue tracker
+│   └── declaration-of-conformity.pdf
+├── v2.3.1/   # ← current
+└── README.md
+```
+
+Every release branches a new version directory. Diffs between versions are reviewable; an auditor can walk back to any historical release and see exactly what evidence existed at that time.
+
+[Aurora Insurance London](/stories/aurora-insurance/) operates under UK regime (not EU AI Act) but uses the same Annex IV structure as the scaffold because their reinsurance partners ask for it. Their compliance lead notes that "writing it once in EU-Act shape and explaining how the UK-specific bits map is much less work than authoring from scratch for every requester."
+
+## What "good" looks like
+
+A working compliance file:
+
+- **Generated-where-possible**: model card, datasheet, eval report, change log all come from build outputs.
+- **Annex IV-structured** (or NIST GOVERN/MAP/MEASURE/MANAGE-structured if non-EU).
+- **Versioned per release.** Every production release has its own dated conformity-assessment file.
+- **CI-checked**: the file's `last-generated` date must be no older than the latest model artefact.
+- **Reviewed by named owner before release.**
+
+## What "bad" looks like
+
+- A Word document that lives on a shared drive, last modified eight months ago.
+- A model card that says "see internal wiki" with no link.
+- A "post-market monitoring plan" that names dashboards that have since been deprecated.
+- A risk-management log with no entries — meaning either nothing went wrong or nothing was logged.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-11" snapshot="2026-05-24" regulationName="EU AI Act">
 The technical documentation of a high-risk AI system shall be drawn up before that system is placed on the market or put into service and shall be kept up-to-date.
 </RegQuote>
 
-**Why this matters:** drafting compliance evidence after a regulator asks for it is an order of magnitude more expensive than maintaining it as a build artefact.
+**Why this matters:** "drawn up before" and "kept up-to-date" are two distinct obligations. The first is one-time and easy to satisfy; the second is recurring and is the audit-finding default for most organisations.
 
----
+<RegQuote source="eu-ai-act" article="Art-10" snapshot="2026-05-24" regulationName="EU AI Act">
+High-risk AI systems which make use of techniques involving the training of models with data shall be developed on the basis of training, validation and testing data sets that meet the quality criteria referred to in paragraphs 2 to 5 whenever such data sets are used.
+</RegQuote>
 
-Next: [Third-party AI Risk](/stages/05-third-party-risk/) — applying the same lens to vendors.
+**Why this matters:** the quality criteria in paragraphs 2-5 of Art. 10 cover relevance, representativeness, freedom-from-errors, statistical properties, and appropriateness for the intended geographic / behavioural / functional setting. Each is auditable; each requires evidence.
+
+## Common pitfalls
+
+- **Authoring the conformity-assessment file as a one-time exercise.** It rots immediately. Treat it as a build artefact.
+- **Mistaking the declaration of conformity for the assessment.** The declaration is a one-page statement; the assessment is the full Annex IV bundle. Auditors ask for both.
+- **Listing harmonised standards the team hasn't actually applied.** Citing ISO/IEC 42001 in section 7 obliges the team to actually conform to it. Citing standards aspirationally creates evidence of misalignment.
+- **Skipping the post-market monitoring plan.** Section 9 is the section that bridges into Stage 12 (Monitoring). A vague monitoring plan creates a vague monitoring practice, which creates incident-response gaps.
+
+## What's next
+
+A working compliance file describes the system as the organisation operates it. [Third-party AI Risk](/stages/05-third-party-risk/) extends the same discipline to systems the organisation didn't build but is still responsible for.

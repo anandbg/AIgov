@@ -24,39 +24,194 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-An agentic AI system is one that takes actions in the world — sends emails, places orders, dispatches vehicles, modifies files. The governance burden steps up sharply at this boundary because the cost of a wrong action is no longer "the user reads bad text" but "money moved, hardware actuated, message sent."
+An <GlossaryTerm term="Agentic AI" /> system is one that takes actions in the world — sends emails, places orders, dispatches vehicles, modifies files, calls APIs, generates code that other systems execute. The governance burden steps up sharply at this boundary because the cost of a wrong action is no longer "the user reads bad text" but **money moved, hardware actuated, message sent, data deleted**.
+
+This stage explains the additional controls every agentic system needs, why prompt-level constraints are not load-bearing for safety, and how to operationalise the EU AI Act Article 14 "stop button" obligation in actual code.
 
 <MermaidJourney currentStage={10} />
 
-## Additional controls
+## Why agentic systems need their own controls
 
-- **Action budget** — declared upper bound on resources the agent may consume per session and per day.
-- **Action allowlist** — explicit enumeration of permitted side-effects; anything else is refused at the tool layer.
-- **Reversibility tier** — every action labelled reversible / costly / irreversible; irreversible actions require explicit confirmation.
-- **Kill switch** — single-button mechanism to halt all agent sessions immediately.
+A predictive AI system has a single failure mode that matters operationally: it produces a wrong output, which a human then reads and either acts on or doesn't. The human is the safety buffer.
+
+An agentic system removes the human from that loop — by design. The model output **is** the action. A wrong action is taken before any human sees it. The buffer must be reconstructed inside the agent's own architecture, with controls that cannot be talked out of by clever prompts.
+
+The five additional controls every agentic system needs:
+
+### 1. Action allowlist (at the tool layer)
+
+The explicit enumeration of side-effects the agent may produce. Implemented at the **tool layer** — the runtime that turns the model's tool-call intent into an actual API request — not at the prompt layer.
+
+This is the single most-important distinction. A system prompt that says "do not send emails to addresses outside the company" can be talked around by sufficiently clever input. A tool-layer allowlist that rejects any email to a non-`@company.com` recipient cannot. The constraint becomes a property of the runtime, not a request to the model.
+
+### 2. Action budget
+
+Declared upper bounds on resources the agent may consume per session and per day:
+
+- Maximum tool calls per session (e.g., 20)
+- Maximum monetary spend per session (e.g., $5)
+- Maximum data transferred per session (e.g., 10 MB)
+- Maximum wall-clock runtime per session (e.g., 60 seconds)
+- Daily aggregate limits at each level
+
+The budget is enforced at the same tool-layer as the allowlist. A session that hits its budget halts with a defined error, not an arbitrarily-truncated output.
+
+### 3. Reversibility tier per action
+
+Every action in the allowlist is tagged with a reversibility tier:
+
+| Tier | Examples | Required gate |
+|---|---|---|
+| Reversible | Read a database row, generate a draft email saved as a draft | Allowlist + budget only |
+| Costly-but-recoverable | Send an email, write a database row, post to Slack | Allowlist + budget + audit log |
+| Irreversible | Wire money, dispatch a vehicle, delete a record, call a webhook with payment authorization | Allowlist + budget + audit log + explicit per-action confirmation |
+
+Irreversible actions **always** require an explicit confirmation step — either a human-in-the-loop approval or a strongly-typed assertion from a separate model with different prompting. "Strongly-typed" means the confirmation is a structured value the runtime can parse, not a free-text "yes, please proceed."
+
+### 4. Kill switch
+
+A single-button mechanism to halt all sessions of the agent **immediately**, executed by the named Incident Commander (Stage 9) without prior escalation. The kill switch:
+
+- Stops in-flight sessions at the next tool-call boundary
+- Refuses to start new sessions
+- Returns a defined "agent paused" response to any caller
+- Logs the activation, the activator, and the rationale
+
+The kill switch is **tested quarterly** as part of the incident-response runbook (Stage 11). An untested kill switch is functionally absent.
+
+### 5. Audit log per action
+
+Every tool call invocation logged with: timestamp, session ID, model version, system-prompt hash, tool name, input arguments, output result, latency, cost. The log is **append-only** and tamper-evident; modifications require explicit override and create their own audit entry.
+
+The log is what makes incident forensics possible. Without it, "we don't know what the agent did" is the default answer to any post-incident question.
+
+## The prompt layer is advisory, not load-bearing
+
+The most common architectural mistake in agentic systems is **treating the system prompt as a safety control**. System prompts:
+
+- Can be partially or fully extracted via prompt-injection attacks
+- Drift over time as engineers tune for other metrics
+- Have undefined behaviour when the user input is adversarial
+- Are not auditable as a binding constraint — they are inputs to a probabilistic system
+
+A system prompt that says "you may only send emails to verified company addresses" is **a hint to the model about preferred behaviour**. The model will obey the hint most of the time. The model will not obey the hint in adversarial settings. The model may stop obeying the hint after a future fine-tuning round.
+
+The tool-layer allowlist enforces the same constraint as a **property of the runtime**. The model can request whatever it wants; the runtime rejects requests outside the allowlist regardless of how the model justified them. Defence in depth: keep the system-prompt hint **and** the tool-layer enforcement.
+
+## Three persona views
 
 <PersonaSection persona="exec">
-Agentic systems can scale damage in ways predictive models cannot. The action budget and kill switch are the cheapest insurance policies you can buy.
+Agentic systems can scale damage in ways predictive models cannot. The action budget and kill switch are the cheapest insurance policies available — they cap the worst-case incident cost at known limits.
+
+Realistic decisions for any agentic deployment:
+
+1. **What is the maximum monetary damage a single rogue session could do?** The action budget must be set below the answer.
+2. **What is the maximum operational damage a 24-hour rogue period could do?** The kill-switch must be activatable inside that window — kill-switch SLA: under 30 minutes.
+3. **What is the legal personal-liability exposure for the named incident commander?** Document the indemnification posture explicitly so the role-holder doesn't bear personal risk for a corporate decision.
+
+The expensive failure mode is **deploying an agent without a tested kill switch.** The first time the kill switch is needed is the worst time to discover it doesn't work, the runtime path was broken by a recent deploy, or the role-holder doesn't have credentials. Quarterly testing in a non-prod environment is non-optional.
+
+The "build vs. buy" calculus for agentic systems differs from predictive: a vendor-provided agent with strong, vendor-enforced action allowlists may be preferable to a home-built agent with weaker controls. Evaluate the vendor's agent-control architecture explicitly before procurement (Stage 5).
 </PersonaSection>
 
 <PersonaSection persona="engineer">
 The action allowlist lives in the tool layer, not the prompt. Prompt-based constraints are advisory at best; the allowlist is the contract.
+
+Implementation patterns that hold up:
+
+- **Tool runtime as a separate process** from the model client. The model client sends "I want to call tool X with arguments Y"; the runtime validates against the allowlist and budget before executing. The model never has direct API credentials.
+- **Allowlist as code**, version-controlled, reviewed in PRs. Adding a new tool requires the AI Risk Owner's review (Stage 9 RACI).
+- **Budget enforcement via a token-bucket** or equivalent rate-limiter, per session and per day, in the tool runtime.
+- **Reversibility tier as a tool annotation**. Each tool exports its reversibility tier; the runtime requires confirmation for irreversible tools.
+- **Audit log via append-only sink** (Kafka, write-once S3, similar). The log shape is fixed; schema changes are migrations, not in-place edits.
+- **Kill switch as a single API call** with strong auth; the API call sets a Redis / config-store flag the tool runtime checks before every tool execution.
+
+For LLM-driven agents specifically: the **tool-definitions schema** sent to the model is the source of truth for what the model knows it can do. Keep that schema in lockstep with the allowlist; a mismatch produces "model tries to call tool that doesn't exist" errors that look like bugs but are actually a security boundary working as intended.
+
+CI patterns:
+
+- Tests that confirm the tool runtime rejects out-of-allowlist requests.
+- Tests that confirm reversibility-tier tools require explicit confirmation.
+- Tests that confirm the kill switch halts in-flight sessions within the SLA.
+- Tests that confirm the audit log captures every tool invocation.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-Article 14 human-oversight obligations bite hardest here. The "stop button" mechanism in Art. 14(4)(e) is a literal requirement, not a metaphor.
+Article 14 human-oversight obligations bite hardest here. The "stop button" mechanism in Art. 14(4)(e) is a literal requirement, not a metaphor. The conformity-assessment evidence:
+
+- A documented design for the stop mechanism, including the named role with authority to activate it.
+- Test records demonstrating the stop mechanism works (quarterly minimum).
+- Logs from the most recent test, showing in-flight sessions halted within SLA.
+
+For agentic systems involving irreversible high-stakes actions (financial transactions, healthcare interventions, autonomous vehicle dispatch), additional sectoral regulation usually layers on top of the AI Act — financial-services rules around authorisation, medical-device rules around clinical decision support, transport-safety rules around autonomous operation. Stage 4 (Compliance) addresses the rollup.
+
+The two NIST AI RMF subcategories that matter:
+
+- **GOVERN-1**: Policies, processes, procedures, and practices across the organization related to the mapping, measuring, and managing of AI risks are in place, transparent, and implemented effectively.
+- **MANAGE-4**: Risk treatments, including response and recovery, and communication plans for the identified and measured AI risks are documented and monitored regularly.
+
+For agentic systems, MANAGE-4's "response and recovery" maps directly to the kill switch + incident-response runbook (Stage 11).
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Densha Logistics Tokyo](/stories/densha-logistics/) operates a dispatch agent that can place orders with vehicle partners. The action allowlist permits dispatch within declared geo-fences and budget limits; anything outside requires human confirmation. The kill switch flips both the agent and the upstream vehicle integrations.
+[Densha Logistics Tokyo](/stories/densha-logistics/) operates a dispatch agent that can place orders with vehicle partners. The action allowlist permits dispatch within declared geo-fences and per-order budget limits; anything outside requires human confirmation. The kill switch flips both the agent and the upstream vehicle integrations simultaneously, so a stopped agent cannot leave half-completed orders in flight.
+
+Their reversibility-tier breakdown:
+
+- **Reversible**: Query carrier availability, draft a dispatch plan for human review.
+- **Costly-but-recoverable**: Confirm a dispatch with a small carrier (cancellable within the contractual notice window).
+- **Irreversible**: Dispatch with a carrier under "no-cancellation" terms, modify a customer-visible booking.
+
+The dispatch agent is constrained to reversible and costly-but-recoverable tools by default. Irreversible tools require an explicit per-action confirmation from the on-duty operations manager, surfaced in the operations console with a 60-second timeout to confirm. The confirmation timeout means a stalled human approval doesn't lock up the agent — the action defaults to "not dispatched" and the agent retries with a different option.
+
+Their kill-switch test runs monthly (more aggressive than the recommended quarterly cadence) because the operational stakes are high. The test runs against a synthetic load that mimics typical session shapes; the SLA target is under 60 seconds from kill-switch press to all sessions halted.
+
+[Sigma Health Berlin](/stories/sigma-health/) has explicitly **refused to build agentic features** into their clinical-summary product. Their AI policy lists "autonomous clinical action" in the off-limits list, and the prohibition extends to anything that could be construed as autonomous in that direction — including auto-drafting orders, auto-sending lab requests, or auto-scheduling follow-ups. The policy decision was made by the Chief Medical Officer; the rationale (sectoral risk profile + regulatory complexity) is documented in the AI policy itself.
+
+## What "good" looks like
+
+A working agentic-oversight implementation:
+
+- **Tool-layer action allowlist**, version-controlled, reviewed by the AI Risk Owner.
+- **Per-session and per-day budgets**, enforced in the tool runtime.
+- **Reversibility-tier annotations** on every tool.
+- **Explicit confirmation gates** for irreversible actions.
+- **Kill switch** activatable by Incident Commander, tested quarterly minimum.
+- **Append-only audit log** per tool invocation.
+- **CI tests** for each of the above.
+
+## What "bad" looks like
+
+- Allowlist enforced via system-prompt instructions only.
+- No declared action budget (or a budget set high enough to be meaningless).
+- Irreversible actions executed without confirmation.
+- Kill switch present in design docs but untested.
+- Audit log incomplete, mutable, or sampled.
+- Tool surface expanded in sprint planning without AI Risk Owner review.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-14" snapshot="2026-05-24" regulationName="EU AI Act">
 Human oversight shall aim to prevent or minimise the risks to health, safety or fundamental rights that may emerge when a high-risk AI system is used in accordance with its intended purpose. The natural persons to whom human oversight is assigned shall be enabled, as appropriate and proportionate, to decide, in any particular situation, not to use the high-risk AI system or otherwise disregard, override or reverse the output of the high-risk AI system.
 </RegQuote>
 
-**Why this matters:** the prompt-engineering layer is not load-bearing for safety. The tool-layer allowlist is. Treat them with different rigour.
+**Why this matters:** the "disregard, override or reverse" three-part test is what the kill switch + reversibility-tier architecture is designed to satisfy. Each verb maps to a different runtime capability.
 
----
+<RegQuote source="nist-ai-rmf" article="MANAGE-4" snapshot="2026-05-24" regulationName="NIST AI RMF">
+Risk treatments, including response and recovery, and communication plans for the identified and measured AI risks are documented and monitored regularly.
+</RegQuote>
 
-Next: [Incident Response](/stages/11-incident-response/) — what to do when one of these controls fails.
+**Why this matters:** the "response and recovery" language maps directly to the kill switch + incident-response runbook combination. The "monitored regularly" language requires the quarterly kill-switch test.
+
+## Common pitfalls
+
+- **System-prompt as safety control.** The system prompt is advisory; only the tool runtime enforces. Many high-profile agent incidents are traceable to system-prompt-only constraints being bypassed.
+- **Untested kill switch.** A kill switch that hasn't been exercised in production-like conditions in the last quarter is unreliable.
+- **Audit log sampled or rate-limited.** Log every action, always. Sampled logs make incident forensics statistical rather than definitive.
+- **Tool allowlist expanded in sprint planning without governance review.** Stage 9 (Accountability) names the AI Risk Owner as a required reviewer for allowlist changes; route the PR accordingly.
+- **Treating "human-in-the-loop" as a confirmation step the human always approves.** If the operator approves 99 % of confirmations without reading, the gate is decorative. Sample-audit approval decisions periodically to detect rubber-stamping.
+
+## What's next
+
+A well-controlled agent still has incidents. [Incident Response](/stages/11-incident-response/) is the runbook discipline that turns a 2am pager into a documented, regulator-ready response.

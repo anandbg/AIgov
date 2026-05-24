@@ -39,11 +39,15 @@ async function* walk(dir) {
 }
 
 /**
- * Strip PersonaSection bodies (operational coaching within a scoped persona is
- * permitted second-person framing — see docs/STYLE.md).
+ * Strip blocks exempt from the voice-check:
+ * - PersonaSection bodies (scoped persona coaching is allowed second-person framing)
+ * - RegQuote bodies (verbatim regulator language must not be paraphrased)
+ * See docs/STYLE.md for the rationale.
  */
-function stripPersonaSections(text) {
-  return text.replace(/<PersonaSection[\s\S]*?<\/PersonaSection>/g, '');
+function stripExemptBlocks(text) {
+  return text
+    .replace(/<PersonaSection[\s\S]*?<\/PersonaSection>/g, '')
+    .replace(/<RegQuote[\s\S]*?<\/RegQuote>/g, '');
 }
 
 async function main() {
@@ -51,7 +55,7 @@ async function main() {
   for (const root of ROOTS) {
     for await (const file of walk(root)) {
       const raw = await readFile(file, 'utf-8');
-      const body = stripPersonaSections(raw);
+      const body = stripExemptBlocks(raw);
       const lines = body.split('\n');
       for (let i = 0; i < lines.length; i++) {
         for (const re of FORBIDDEN) {

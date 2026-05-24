@@ -24,36 +24,179 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-<GlossaryTerm term="Risk tier" /> classification is the gate that decides whether your AI system needs three pages of documentation or three hundred. Misclassify early and the rework cost compounds across every downstream stage.
+<GlossaryTerm term="Risk tier" /> classification is the gate that decides whether an AI system needs three pages of documentation or three hundred. Misclassify early and the rework cost compounds across every downstream stage. Classify well, and every later artefact — the conformity-assessment file, the monitoring dashboard, the incident-response runbook — knows exactly how heavy it needs to be.
+
+This stage explains the four tiers, the decision rules that map a system to a tier, the most common misclassifications, and how to write a tier rationale that holds up under audit.
 
 <MermaidJourney currentStage={2} />
 
-## The four tiers
+## The four tiers — what each one obligates
 
-The EU AI Act uses four tiers (unacceptable, high-risk, limited-risk, minimal-risk). Other frameworks differ — NIST AI RMF talks about "context" rather than discrete tiers; ISO/IEC 42001 leaves the tiering taxonomy to your AIMS. The discipline is the same: classify once, write down the reasoning, revisit when context changes.
+The EU AI Act formalises four tiers that have become the de facto reference vocabulary even outside the EU. Each tier triggers a different set of obligations.
+
+### Unacceptable risk (prohibited)
+
+Article 5 lists eight categories of AI practices that **cannot lawfully be placed on the market** in the EU. The list includes:
+
+- Subliminal manipulation that materially distorts behaviour and causes harm
+- Exploitation of vulnerabilities (age, disability, social/economic situation)
+- Social scoring by public authorities or on their behalf
+- Predictive policing based solely on profiling
+- Untargeted scraping of facial images from the internet or CCTV
+- Emotion recognition in workplace and educational settings
+- Biometric categorisation inferring protected characteristics
+- Real-time remote biometric identification in public spaces by law enforcement (with narrow exceptions)
+
+These are not "high-risk with extra controls" — they are outright prohibitions. The off-limits list in the AI policy (stage 1) should mirror Article 5 plus any sector-specific prohibitions.
+
+### High-risk
+
+Article 6 + Annex III define this tier. A system is high-risk if either:
+
+- **Annex I**: it is a safety component of a product covered by EU harmonisation legislation (machinery, toys, medical devices, lifts, aviation, etc.), AND the product requires third-party conformity assessment under that other legislation.
+- **Annex III**: it falls into one of eight categories — biometrics; critical infrastructure; education and vocational training; employment and workforce management; access to essential private and public services and benefits; law enforcement; migration, asylum, and border control; administration of justice and democratic processes.
+
+High-risk systems trigger the heaviest provider obligations: risk management system (Art. 9), data governance (Art. 10), technical documentation (Art. 11), record-keeping (Art. 12), transparency (Art. 13), human oversight (Art. 14), accuracy/robustness/cybersecurity (Art. 15), conformity assessment (Art. 43), and post-market monitoring (Art. 72).
+
+**Article 6(3) carve-out**: a system that *would* fall into Annex III may be exempted if it performs only a "narrow procedural task," improves the result of a previously-completed human activity, detects decision-making patterns without replacing the decision, or performs preparatory work. The carve-out requires a *documented and registered* justification — that paper exercise is non-negotiable.
+
+### Limited risk (transparency obligations)
+
+Article 50 imposes transparency-only obligations on AI systems that interact with natural persons (chatbots), generate synthetic content (deepfakes), categorise people by biometrics, or recognise emotions. The obligations are real but lighter: tell the user they're interacting with an AI; mark synthetic content as such; provide opt-out where feasible.
+
+### Minimal risk
+
+Everything else. No EU AI Act-specific obligations, though GDPR and sector-specific rules still apply. The vast majority of AI systems in the world sit here — a spam filter, a recommendation engine for an online store, an autocomplete in a code editor.
+
+## The classification decision in practice
+
+Tiering is **not** based on:
+
+- Model size or parameter count
+- Training-data volume
+- Whether the system "uses ML" (a sufficiently sophisticated rules engine can be high-risk if it makes the same decisions)
+- Whether the team calls it "AI" in marketing
+
+Tiering **is** based on:
+
+- **Use context** — who the system affects, where it is deployed, what decisions it influences
+- **Decision authority** — does the output trigger an action, recommend one, or only inform a human?
+- **Downside of error** — a wrong answer for who, with what consequence, recoverable how
+
+A 1B-parameter classifier deciding loan eligibility is **high-risk** (Annex III §5(b)). A 70B-parameter LLM summarising internal meeting notes is **minimal**. A 7B-parameter LLM exposed as a customer-service chatbot is **limited-risk** (transparency obligation under Article 50). Same model architecture, three different tiers, driven entirely by deployment context.
+
+## Common misclassifications and how to avoid them
+
+### Misclassification 1: "It's just decision-support, so it's not high-risk"
+
+A model that *recommends* an outcome to a human decision-maker is often still high-risk, because in practice humans rubber-stamp the recommendation. Annex III explicitly captures systems "intended to be used to evaluate the eligibility of natural persons for essential public assistance benefits and services" — whether the human in the loop overrides the recommendation or not. The test is the *intended use*, not the documented workflow.
+
+### Misclassification 2: "We're the deployer, not the provider, so it's the vendor's problem"
+
+Article 25(1) shifts deployer to provider status when the deployer substantially modifies a high-risk system or puts their own trademark on it. Fine-tuning a third-party foundation model on your own data often crosses that line. The substantial-modification test is fact-specific — document the boundary explicitly in a memo, don't assume.
+
+### Misclassification 3: "We're not in the EU, so the EU AI Act doesn't apply"
+
+Article 2(1)(c) extends the Act extraterritorially to providers and deployers established outside the EU **where the output produced by the AI system is used in the EU**. A US-based SaaS company whose model produces decisions consumed by an EU customer is in scope.
+
+### Misclassification 4: "The system is internal-only, so it's not regulated"
+
+Internal-use systems in scope of Annex III §4 (employment, workforce management) include CV-screeners, performance evaluation tools, work-allocation systems, and termination-recommendation systems. The classification depends on the use-case category, not the audience.
+
+## Writing a defensible tier rationale
+
+Every classification decision generates a one-page artefact — the **tier rationale**. Audit-grade content:
+
+1. **The classification** — single tier name.
+2. **The decision rule cited** — Article 5 / Annex I / Annex III §N / Article 6(3) carve-out / minimal-risk default.
+3. **The factual basis** — three to five sentences naming the use-context, the decision authority, and the downside of error.
+4. **The named risk owner** — by role, signing the rationale.
+5. **The review cadence** — quarterly for high-risk, annually for others, plus on any material change.
+6. **Cross-references** — to the AI policy section that authorised the classification, to the per-system risk file (Stage 3), to the model card (Stage 8).
+
+The tier rationale lives next to the model card in the docs repo. A diff to either triggers a notification to the risk owner.
+
+## Three persona views on the same classification
 
 <PersonaSection persona="exec">
 The tier determines whether a system can ship in days or months. Push for clarity on this decision early — every week the classification stays ambiguous costs engineering velocity and counsel time.
+
+Two specific board-level commitments make this stage work in practice:
+
+1. **A standing 30-minute weekly slot** with legal + engineering + product to triage classification questions. Without it, classification decisions stall waiting for ad-hoc availability.
+2. **A documented authority** for the AI Risk Owner to default classifications upward in ambiguity. When in doubt, classify high — the cost of over-classification is paperwork; the cost of under-classification is a regulator notice plus retroactive rework.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
-Tiering is not based on model size or training-data volume. It is based on use-context: who the system affects, what decisions it influences, what the downside of error looks like. A 1B-parameter model deciding loan eligibility is high-risk; a 70B-parameter model summarising internal meeting notes is not.
+Tiering is not based on model size or training-data volume. It is based on use-context. Defend that line in product reviews — the temptation is always to argue "it's just text generation, it's not really high-risk," and the temptation is almost always wrong when the text is consumed in a decision context.
+
+Engineering can shorten the tiering cycle by structuring the decision-rule machine-readably:
+
+- Every new system PR includes a `risk-tier.yaml` with `category`, `decision-rule`, `factual-basis`, `owner-role` fields.
+- A CI script grep-checks the values against the catalogue defined in the AI policy.
+- The risk owner approves the YAML via PR review.
+
+The classification then has a git history, a known reviewer, and an enforceable shape.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-EU AI Act Article 6 plus Annex III are the operative texts. Annex III lists eight high-risk use-case categories. Crucially, Article 6(3) lets you derogate from high-risk classification with a written and registered justification — that's a paper exercise you cannot afford to skip when you believe it applies.
+EU AI Act Article 6 plus Annex III are the operative texts. Annex III lists eight high-risk use-case categories; Article 6(3) provides a derogation pathway. Both must be cited verbatim in the tier rationale — paraphrased citations create gaps the auditor will probe.
+
+The Article 6(3) derogation is the highest-leverage move in the entire framework: a system that *would* be Annex III high-risk can drop to limited-risk if the derogation conditions hold. But the derogation requires registration in the Article 49 database. Skip the registration and the derogation is invalid, retroactively.
+
+NIST AI RMF MAP-1 covers the same ground from a context-mapping perspective and is often a cleaner authoring frame even for organisations whose primary obligation is EU AI Act. Use NIST MAP-1 as the scaffold; map to Annex III at the end.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Aurora Insurance London](/stories/aurora-insurance/) tiers their claim-fraud detection model as high-risk under Annex III §5(b). Their LLM-based customer-service summariser is limited-risk (transparency obligations only). Both decisions are documented in a one-page tier rationale stored next to the model card.
+[Aurora Insurance London](/stories/aurora-insurance/) tiers their claim-fraud detection model as **high-risk** under Annex III §5(b) (access to essential private services, including insurance). Their LLM-based customer-service summariser is **limited-risk** (transparency obligations under Article 50 — every chat session opens with a "you're talking to an AI assistant" notice). Both decisions are documented in a one-page tier rationale stored next to the model card.
+
+The interesting case was an internal employee-handbook search tool. Engineering wanted **minimal-risk** (no obligations). Compliance argued it edged into Annex III §4 (employment, workforce management) because the tool answered questions about leave entitlements, disciplinary processes, and benefit eligibility — material to employment decisions. They tiered it as **limited-risk** with a transparency banner and a documented "decision support only, not authoritative" framing. Six months later, an HR team started using the tool to draft termination letters — at which point the classification flipped to high-risk and the system needed a conformity-assessment file. The lesson: tier on *intended-and-foreseeable* use, not the launch-day use.
+
+[Acme Robotics US](/stories/acme-robotics/) operates outside the EU and tiers under NIST AI RMF instead. Their warehouse-navigation model uses NIST's context-mapping framework (MAP-1.1 through MAP-1.6) as the rubric. The classification recorded is "production safety-relevant" with controls calibrated against MAP-2 (risk measurement). They re-map to EU AI Act terminology *only* when a customer requires EU-shaped evidence; the primary classification stays NIST-native.
+
+## What "good" looks like
+
+A defensible tier classification:
+
+- **One page, dated, signed** by the named risk owner.
+- **Cites the decision rule by article number**, not paraphrase.
+- **States the factual basis** — three to five concrete sentences.
+- **Lists the controls triggered** at this tier (linked to Stage 4 Compliance artefacts).
+- **Names the next review date.**
+- **Stores in the docs repo next to the model card** — not in a separate spreadsheet that nobody opens.
+
+## What "bad" looks like
+
+A red-flag tier classification:
+
+- A spreadsheet cell with "Medium" and no rationale.
+- A rationale that argues "we don't think this is really high-risk" without addressing Annex III explicitly.
+- A classification signed by no one.
+- No stated review date.
+- No link to the model card or per-system risk file.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-6" snapshot="2026-05-24" regulationName="EU AI Act">
 An AI system shall be considered to be high-risk where both of the following conditions are fulfilled: (a) the AI system is intended to be used as a safety component of a product, or is itself a product, covered by the Union harmonisation legislation listed in Annex I; (b) the product whose safety component is the AI system, or the AI system itself as a product, is required to undergo a third-party conformity assessment.
 </RegQuote>
 
-**Why this matters:** misclassification is the single most expensive mistake in this entire journey — every downstream control depends on the tier. Get a second pair of eyes on Annex III mapping before you commit.
+**Why this matters:** Article 6(1) is the safety-component limb of high-risk classification. The Annex III limb (Article 6(2)) is the use-case limb. Most software-only AI systems land via Annex III rather than Annex I — but adapters that touch hardware, embedded systems, or regulated products fall under Annex I.
 
----
+<RegQuote source="nist-ai-rmf" article="MAP-1" snapshot="2026-05-24" regulationName="NIST AI RMF">
+The MAP function establishes the context to frame risks related to an AI system. The information gathered while carrying out this function enables negative risk prevention and informs decisions for processes such as model management, as well as an initial decision about appropriateness or the need for an AI solution.
+</RegQuote>
 
-Next: [Risk Check](/stages/03-risk-check/) — the periodic re-evaluation of the tier you just assigned.
+**Why this matters:** NIST MAP-1 gives a context-mapping frame that is useful even for organisations operating under EU AI Act. The two frameworks reach the same conclusions via different rubrics — citing both signals seriousness to a reviewer.
+
+## Common pitfalls
+
+- **Tiering once at launch and never revisiting.** Risk profile changes when training data shifts, when downstream consumers change, when the system gains new tools or expanded scope. [Risk Check](/stages/03-risk-check/) is the recurring-discipline counterpart that catches drift.
+- **Tiering without naming a risk owner.** A classification with no owner has no one accountable when the regulator asks who decided.
+- **Treating the Article 6(3) derogation as a checkbox.** The derogation requires *registration* — the registration is what makes it real. Many organisations claim the derogation in writing without ever registering, then lose it on first audit.
+- **Confusing tier with risk score.** A "high-risk" tier under EU AI Act is a regulatory classification triggering specific controls. It is not the same as a quantitative risk score (likelihood × impact) used in internal risk registers. Use both, label them differently.
+
+## What's next
+
+A tier classification is a snapshot at deployment. [Risk Check](/stages/03-risk-check/) is the recurring re-evaluation that catches drift between the system you classified and the system you're now running.

@@ -24,38 +24,168 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-A <GlossaryTerm term="Risk tier" /> assigned at launch is a snapshot, not a guarantee. Risk Check is the recurring discipline that catches the system drifting outside its assigned tier — usually because a feature shipped, the dataset shifted, or someone enabled a new downstream consumer.
+A <GlossaryTerm term="Risk tier" /> assigned at launch is a snapshot, not a guarantee. Risk Check is the recurring discipline that catches a system drifting outside its assigned tier — usually because a feature shipped, the dataset shifted, or someone enabled a new downstream consumer who turned a decision-support tool into a decision-making tool.
+
+This stage explains when risk check fires, what it actually examines, and how to wire it into a real engineering pipeline so it doesn't become quarterly theatre.
 
 <MermaidJourney currentStage={3} />
 
+## Why classifications drift
+
+Five forces push a system out of its declared tier between formal reviews:
+
+1. **Model retraining.** The next training run pulls in new data sources, shifting the input distribution and the output behaviour. A model that was 92 % accurate at a fairness rubric becomes 84 %; a model that refused certain prompt classes starts answering them.
+2. **Prompt or system-prompt changes.** For LLM-backed systems, a small system-prompt edit can flip the safety posture entirely. "Reply in Markdown" becomes "Reply in Markdown, including HTML where useful" — and suddenly the output is rendered as live HTML in a downstream UI.
+3. **Tool surface expansion.** An agentic system that originally only summarised text gets a `send_email` tool added in sprint planning. The risk tier just changed; the documentation didn't.
+4. **Downstream consumer change.** A model classified as decision-support gets adopted by a new team that uses it as a decision-maker — same model, same training, but the classification rule (use context) has shifted.
+5. **Regulatory boundary movement.** A new EU AI Act delegated act, a new state law, a new sector code — and the question of which tier the system falls under reopens.
+
+A well-designed risk check is the regular forcing function that asks "has any of this changed since we last looked?"
+
 ## When risk check fires
 
-- After any change to model, training data, or system prompt that exceeds your declared change-control threshold.
-- On a calendar cadence aligned with the tier — typically quarterly for high-risk, annually for limited-risk.
-- When a downstream incident report (Stage 11) finds the tier was wrong.
+Three triggers, of which only the first is calendar-based:
+
+### Trigger 1: Calendar
+
+- **High-risk systems**: quarterly.
+- **Limited-risk systems**: annually.
+- **Minimal-risk systems**: at major version changes only.
+
+### Trigger 2: Change-control threshold
+
+Any of these crosses the threshold:
+
+- Material change to training data (added a new source > 10 % of total volume; removed a source; significant rebalance)
+- Architecture change (different base model, different chunking strategy, different retrieval pipeline)
+- System-prompt change for LLM-backed systems
+- New tool added to an agentic system's allowlist
+- New downstream consumer enabled (new internal team, new API customer, new geo)
+
+The threshold lives in the AI policy. Crossing it triggers an out-of-cycle risk check before the change goes to production.
+
+### Trigger 3: Incident-driven
+
+An incident (Stage 11) that touches the system implies the prior classification was at minimum imprecise. A risk check follows every S1 or S2 incident as part of the post-mortem.
+
+## What a risk check actually examines
+
+A risk check is not a re-run of the original classification — it is a five-section delta report.
+
+### Section 1: Inventory delta
+
+What changed since the last check, in plain language: new data sources, new tools, new downstream consumers, new model versions, new vendors. Pulled from the change log in the docs repo.
+
+### Section 2: Behavioural delta
+
+Run the same evaluation suite that was run at launch (Stage 12 has the suite). Report the deltas:
+
+- Headline accuracy / refusal rate / hallucination rate
+- Per-protected-attribute performance variance
+- Latency distribution
+- Cost per request
+
+A delta beyond a stated threshold triggers a deeper review.
+
+### Section 3: Tier-implication delta
+
+Has anything in section 1 or 2 changed the classification rule that originally applied? If the system gained a tool that lets it take an irreversible action, has the tier shifted from limited-risk to high-risk? If the downstream consumer changed, is the use-context still inside the original Annex III justification?
+
+### Section 4: Control coverage delta
+
+For every control mandated at the current tier, is the evidence still current? Conformity-assessment file last updated when? DPIA reviewed when? Incident runbook tested when?
+
+### Section 5: Recommendation
+
+One of: **maintain**, **upgrade tier**, **downgrade tier (with derogation registration)**, **pause pending fix**, **retire**.
+
+The recommendation is signed by the named risk owner.
+
+## Three persona views on the same check
 
 <PersonaSection persona="exec">
-Risk check is the cheapest moment in the lifecycle to catch a tier mistake. Once a misclassified system is in production, the legal and operational cost of re-tiering compounds. Budget the recurring time.
+Risk check is the cheapest moment in the lifecycle to catch a tier mistake. Once a misclassified system is in production, the legal and operational cost of re-tiering compounds — every artefact produced under the wrong classification has to be revisited.
+
+Budget the recurring time. The realistic cost of a quarterly risk check on a high-risk system is roughly one engineer-week plus a few hours of compliance + risk-owner attention. An organisation running 10 high-risk systems is therefore allocating 10 engineer-weeks per quarter to this — not optional, not deferred, baked into the engineering capacity model.
+
+The single best leadership move is **separating the risk owner from the product owner**. Same person can't honestly assess whether a system they're trying to ship has drifted; the structural conflict guarantees rationalisation. A different person, with the documented authority to pause deployment, makes the function real.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
-Tie the risk check to your release pipeline. A model retrain that crosses your declared drift threshold is the most common trigger. Wire a flag into your training infra that pings the risk owner when drift exceeds the threshold.
+Tie the risk check to the release pipeline. A model retrain that crosses the declared drift threshold is the most common trigger. Wire a flag into the training infrastructure that pings the risk owner when any of these conditions holds:
+
+- Drift on a calibrated evaluation set exceeds N standard deviations.
+- A new data source landed in the training corpus above the threshold.
+- The model's tool allowlist (for agentic systems) gained a member.
+- The system prompt diff touches the safety / guardrail section.
+
+Each of these auto-files a "risk check needed" issue with a 14-day SLA. The risk owner triages — usually approving in 30 minutes, occasionally requiring a deeper look.
+
+The CI-level enforcement to add: a `risk-check.yaml` per system, with a `last-checked` date, a `next-check-due` date, and a `current-tier` field. A pre-deploy hook fails if `next-check-due` is in the past. Trivially enforceable, hard to forget, fits the engineering norm of "the build won't go green until you do the thing."
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-EU AI Act Article 9(2) requires the risk-management system to be a continuous iterative process throughout the life cycle. That language reads as "annual" but bites as "any material change" — your auditor will look at the change log first.
+EU AI Act Article 9(2) requires the risk-management system to be a "continuous iterative process throughout the life cycle." That language reads as "annual" but bites as "any material change." The auditor will look at the change log first.
+
+Three things to record in the risk-check artefact so audit findings stay clean:
+
+1. **The trigger.** Which of the three triggers fired this check?
+2. **The delta examined.** What changed since last check, in inventory and in behaviour?
+3. **The decision made.** Maintain / upgrade / downgrade / pause / retire, with rationale citing the relevant article.
+
+NIST AI RMF MEASURE-2 and MANAGE-1 give the same shape for organisations operating outside the EU. The cross-reference is useful — auditors who recognise both frameworks treat the dual-citation as evidence of seriousness rather than confusion.
+
+The Article 6(3) derogation status (Stage 2) is re-examined at every risk check. A system that earned a high-risk-to-limited-risk derogation at launch may have drifted in a way that breaks the derogation conditions. Lose the derogation, and the system is high-risk again, retroactively.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Acme Robotics US](/stories/acme-robotics/) ran their first quarterly risk check on the warehouse-navigation model six months after launch. The check caught that the model had been silently retrained on data from a new facility that included near-miss-with-human events. The tier shifted from limited to high-risk; the conformity assessment took six weeks; deployment paused in the meantime.
+[Acme Robotics US](/stories/acme-robotics/) ran their first quarterly risk check on the warehouse-navigation model six months after launch. The check caught that the model had been silently retrained on data from a new facility that included near-miss-with-human events. The tier shifted from limited-risk (under their NIST MAP-1 mapping) to high-risk (because the operating context now included routine human proximity). The conformity-style controls took six weeks to upgrade; deployment paused in the meantime.
+
+The post-mortem identified the gap: the data-engineering team had been pulling in new facility data automatically via a pipeline that didn't notify the AI risk owner. The fix was a path-filter trigger on the data pipeline — adding a new facility to the training corpus now files a risk-check issue automatically.
+
+[Sigma Health Berlin](/stories/sigma-health/) runs their quarterly check on the clinical-summary model as a shared session: the ML engineering lead, the AI Risk Owner, and the Chief Medical Officer in a 90-minute walk-through. The CMO's presence catches drift in the clinician-acceptance metric (how often clinicians accept the summary as-is vs. heavily edit it) before it becomes a quality issue. The lesson: the risk check is more effective with a clinical-domain reviewer in the room than as a paper exercise.
+
+## What "good" looks like
+
+A working risk-check artefact:
+
+- **Five sections** (inventory delta, behavioural delta, tier-implication, control coverage, recommendation).
+- **Dated, signed** by the named risk owner.
+- **Cross-references** the previous risk-check artefact (chain of evidence).
+- **Records the trigger** explicitly (calendar / change-control / incident).
+- **States the next review date.**
+- **Stored next to the model card** in the docs repo.
+
+## What "bad" looks like
+
+- A quarterly spreadsheet entry that says "no change."
+- No diff against the previous classification.
+- No behavioural evaluation rerun.
+- No tier-implication analysis when material things changed.
+- Recommendation: "continue monitoring" without naming what changed and what the threshold is.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-9" snapshot="2026-05-24" regulationName="EU AI Act">
 A risk management system shall be established, implemented, documented and maintained in relation to high-risk AI systems. The risk management system shall be understood as a continuous iterative process planned and run throughout the entire lifecycle of a high-risk AI system, requiring regular systematic review and updating.
 </RegQuote>
 
-**Why this matters:** every misclassified system you discover after launch costs more to fix than every classification you got right. Make the recurring check non-negotiable.
+**Why this matters:** the "continuous iterative process" phrasing is the legal hook for periodic review. A high-risk system without a documented review cadence fails this test on its face.
 
----
+<RegQuote source="nist-ai-rmf" article="MEASURE-2" snapshot="2026-05-24" regulationName="NIST AI RMF">
+AI system performance or assurance criteria are measured qualitatively or quantitatively and demonstrated for conditions similar to deployment setting(s). Measures are documented.
+</RegQuote>
 
-Next: [Compliance](/stages/04-compliance/) — building the controls that the tier just demanded.
+**Why this matters:** NIST MEASURE-2 anchors the behavioural-delta section of the risk check. The "conditions similar to deployment setting(s)" language is what justifies running the evaluation suite against production-like data, not just a synthetic test set.
+
+## Common pitfalls
+
+- **Treating the calendar trigger as the only trigger.** Most material changes happen between scheduled reviews. The change-control trigger (the threshold-based one) catches them in real time.
+- **Running the check without a behavioural delta.** A risk check that doesn't include "we re-ran the evaluation suite and the numbers are…" is a paperwork exercise. The whole point is empirical drift detection.
+- **Making the risk-check artefact a wiki page that gets overwritten.** It must be a dated artefact with chain-of-evidence to the previous check. A wiki page without git-history is uninterpretable to an auditor.
+- **Skipping the recommendation step.** Even "maintain" is a recommendation that needs to be signed. The signature is what makes the artefact legally meaningful.
+
+## What's next
+
+A clean risk check confirms (or updates) the tier classification, which determines what evidence [Compliance](/stages/04-compliance/) must produce.

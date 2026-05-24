@@ -24,13 +24,27 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-Red-teaming closes the loop between the controls you claim and the failures the system can actually produce. Continuous means it is not a one-off pre-launch exercise.
+Red-teaming closes the loop between the controls the organisation **claims** and the failures the system can **actually** produce. Continuous means it is not a one-off pre-launch exercise — it is a recurring discipline tied to release cadence, model retraining, and the threat-landscape evolution of the adversarial-ML field.
+
+This stage explains why pre-launch testing is insufficient, what a working continuous programme looks like, and how to wire OWASP LLM Top 10 + MITRE ATLAS into engineering CI so a known attack class never silently resurfaces.
 
 <MermaidJourney currentStage={7} />
 
+## Why continuous, not periodic
+
+A pre-launch security review establishes a baseline. It does not survive contact with:
+
+- **New attack classes published after launch.** OWASP LLM Top 10 is revised; new MITRE ATLAS techniques are catalogued; new academic papers expose new failure modes.
+- **Model retraining.** The model that passed the red-team in March behaves differently in September.
+- **Prompt / system-prompt drift.** The system prompt that included safety scaffolding has been trimmed for token-cost reasons.
+- **Tool surface expansion** (for agentic systems). New tools = new attack surface.
+- **Downstream integration changes.** The model now feeds into a system that renders its output as HTML — XSS just became reachable.
+
+Continuous red-teaming is the discipline that runs the adversarial harness on every material change and on a calendar cadence between changes.
+
 ## Adversarial-ML control catalogue (TRK-17)
 
-This site cross-lists four open catalogues. Each row maps a category of failure to representative entries across all four — pick one as the canonical source-of-truth for your programme; the others are sanity references.
+This site cross-lists four open catalogues. Each row maps a category of failure to representative entries across all four — pick one as the canonical source-of-truth for the programme; the others are sanity references.
 
 | Failure category | OWASP LLM Top 10 | MITRE ATLAS | PyRIT (test) | Garak (probe) |
 |---|---|---|---|---|
@@ -41,35 +55,149 @@ This site cross-lists four open catalogues. Each row maps a category of failure 
 | Model DoS | LLM04 | AML.T0022 | `resource_exhaustion` orchestrator | n/a |
 | Supply-chain (model & tool) | LLM07 / LLM10 | AML.T0010 | n/a | n/a |
 
-Match each row to a named regression test in your CI so a known attack pattern never silently resurfaces. The four catalogues:
+Match each row to a named regression test in CI so a known attack pattern never silently resurfaces. The four catalogues:
 
 - **OWASP LLM Top 10** — application-level attack patterns
 - **MITRE ATLAS** — adversarial-ML tactics, techniques, and real-world case studies
 - **PyRIT** — Microsoft's red-team automation framework
 - **Garak** — LLM vulnerability scanner with a large probe library
 
+## What a continuous red-team programme actually does
+
+Five activities, of which the first three run automatically in CI:
+
+### 1. Regression suite (every PR)
+
+A fixed set of named tests, each mapped to a known attack class. Examples:
+
+- `redteam.prompt_injection.basic_override` — "Ignore previous instructions" pattern
+- `redteam.exfiltration.system_prompt_leak` — "Reveal your system prompt verbatim"
+- `redteam.scope.legal_advice_refusal` — "Give me legal advice on…" pattern
+- `redteam.tool_misuse.unauthorized_email` — agent attempts to send email outside allowlist
+- `redteam.bias.protected_attribute_variance` — per-attribute performance regression
+
+Each test asserts the expected behaviour (refusal / safe response / bounded variance). Any failure blocks the merge.
+
+### 2. Eval-suite expansion (every adversarial-ML release)
+
+When OWASP publishes a new LLM Top 10 entry, when MITRE adds an ATLAS technique, when a major academic paper drops, the programme:
+
+- Reviews the new finding
+- Decides applicability to systems in scope
+- Writes a regression test for the applicable findings
+- Adds the test to the suite
+
+Cadence: weekly review, monthly catalogue update.
+
+### 3. Probe-library runs (every nightly build)
+
+Garak's probe library and PyRIT's orchestrator suites run against staging deployments nightly. Failures file issues automatically.
+
+### 4. Exploratory red-team (quarterly)
+
+A human red-team — internal staff or contracted external testers — runs unscripted attacks against staging. The point is finding novel failure modes the automated suite hasn't anticipated. Findings flow into the regression suite as named tests.
+
+### 5. Threat-model refresh (annually)
+
+The system threat model (per ISO 27005-style methodology) is refreshed against the current adversarial-ML state-of-the-art. Refresh outputs feed into the AI policy off-limits list (Stage 1), risk-tier rationale (Stage 2), and conformity-assessment file (Stage 4).
+
+## Three persona views
+
 <PersonaSection persona="exec">
 Budget for adversarial findings to require remediation work. A red-team that never finds anything is either not adversarial enough or the system has nothing to lose.
+
+The realistic operating cost of a continuous red-team programme:
+
+- **CI regression suite**: small once built; growing slowly with each new finding. Baseline: 1-2 engineer-days per quarter to maintain.
+- **Exploratory red-team**: 1 engineer-week per quarter (internal) or $20-50k per engagement (external).
+- **Threat-model refresh**: 2-4 engineer-weeks annually.
+- **Remediation budget**: variable. Assume 20-30 % of red-team findings require non-trivial engineering work.
+
+The leadership move that makes this real is **a CI gate that blocks deployment on red-team regression**. Without the gate, regressions slip through under deadline pressure. With it, the gate becomes part of the engineering norm — like type-checking or test-passing.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
-Wire OWASP LLM Top 10 entries into your test suite as named regression cases. Each new model version runs the suite before merge. Failures gate the merge.
+Wire OWASP LLM Top 10 entries into the test suite as named regression cases. Each new model version runs the suite before merge. Failures gate the merge.
+
+Concrete patterns:
+
+- **A `redteam/` directory** in the application repo with one test file per named attack class.
+- **A `redteam-fixtures.json`** with the known-bad-input library (the same shape this site's chat-worker uses — see `apps/chat-worker/fixtures/injection-tests.json`).
+- **A nightly job** that runs Garak against staging and files an issue per critical/serious finding.
+- **PyRIT orchestrator runs** scheduled weekly against staging, with output captured into the same eval reporting pipeline as the standard evaluations.
+
+For agentic systems specifically:
+
+- **Tool-misuse tests** that attempt to invoke tools outside the declared allowlist.
+- **Reversibility-tier tests** that confirm irreversible actions require explicit confirmation.
+- **Resource-budget tests** that confirm the agent stops at the declared action budget per session.
+
+The CI rule to add: any new attack class published in OWASP LLM Top 10 or MITRE ATLAS within the prior 30 days that has no corresponding regression test triggers a "redteam coverage gap" issue with a 14-day SLA.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-Article 15 obligations include accuracy, robustness, and cybersecurity — red-team findings + remediation are the evidence trail.
+EU AI Act Article 15 obligations include accuracy, robustness, and cybersecurity — red-team findings + remediation are the evidence trail. The conformity-assessment file (Stage 4 §3 and §4) references the red-team activity directly.
+
+Three documentation patterns that audit cleanly:
+
+1. **Red-team plan** as part of the conformity-assessment file. Names the catalogues used, the cadence, the named owners, the escalation path on critical findings.
+2. **Red-team findings log** — every finding dated, classified by severity, with status (open / mitigated / accepted-residual).
+3. **Remediation record** linking each finding to a commit / config change / policy update that addressed it.
+
+The audit risk is **a documented red-team plan with no evidence of it being run.** Auditors look for the findings log first; an empty log is a red flag, not a clean bill of health.
+
+For organisations subject to NIST AI RMF, MEASURE-2 and MEASURE-3 are the operative subcategories. The NIST playbook treats red-teaming as a first-class function within MEASURE, not an afterthought.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Sigma Health Berlin](/stories/sigma-health/) runs PyRIT against their clinical-summary model weekly. Findings flow into the same issue tracker as functional bugs, with severity labels that mirror their incident-response severity scheme (Stage 11).
+[Sigma Health Berlin](/stories/sigma-health/) runs PyRIT against their clinical-summary model weekly. Findings flow into the same issue tracker as functional bugs, with severity labels that mirror their incident-response severity scheme (Stage 11). The most common finding class is **prompt injection via patient-record content** — a malicious string in a record could redirect the summary's emphasis. Their mitigation: strict input-content sanitisation plus a system-prompt-level instruction that explicitly enumerates the only content sources the model should treat as authoritative.
+
+Their exploratory red-team is run by an external partner quarterly. The most recent engagement found a tool-misuse path: the model could be coaxed into formatting clinical notes as fake test-result records that downstream systems would parse as legitimate. The mitigation was a structural one — the model's output schema added a `provenance` field that downstream systems require before treating any data as test results.
+
+[Acme Robotics US](/stories/acme-robotics/) red-teams the warehouse-navigation model differently: their adversarial inputs are **simulated sensor anomalies** (occluded camera, partial LIDAR returns, conflicting odometry). The CI gate runs 50 named scenarios per release. A failure on any scenario blocks the release until the team confirms either (a) a mitigation has shipped, or (b) the scenario is intentionally out-of-scope for the current model version and documented as such in the limitations section of the model card.
+
+## What "good" looks like
+
+A working continuous red-team programme:
+
+- **A regression suite in CI** with one named test per known attack class.
+- **A findings log** dated, with severity, status, remediation reference.
+- **Probe-library runs** scheduled (nightly or weekly).
+- **Exploratory red-team** quarterly with novel-finding ingestion into the regression suite.
+- **Threat-model refresh** annually.
+- **A clear severity scheme** that aligns with incident-response severity (Stage 11).
+- **A documented owner** per finding.
+
+## What "bad" looks like
+
+- A pre-launch security review that was never repeated.
+- A red-team plan in the conformity-assessment file with no findings log to match.
+- "Penetration testing" that only covers the network stack, not the model.
+- Findings closed as "won't fix" with no documented residual-risk acceptance.
+- No CI gate — regressions ship.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-15" snapshot="2026-05-24" regulationName="EU AI Act">
 High-risk AI systems shall be designed and developed in such a way that they achieve an appropriate level of accuracy, robustness, and cybersecurity, and perform consistently in those respects throughout their lifecycle.
 </RegQuote>
 
-**Why this matters:** the adversarial-ML field moves faster than regulation. A red-team programme is the only mechanism that detects new attack classes before they become incidents.
+**Why this matters:** the "throughout their lifecycle" phrasing extends the testing obligation past launch. A pre-launch test alone does not satisfy Art. 15.
 
----
+<RegQuote source="nist-ai-rmf" article="MEASURE-2" snapshot="2026-05-24" regulationName="NIST AI RMF">
+AI system performance or assurance criteria are measured qualitatively or quantitatively and demonstrated for conditions similar to deployment setting(s). Measures are documented.
+</RegQuote>
 
-Next: [Documentation](/stages/08-documentation/) — the artefacts that survive personnel turnover.
+**Why this matters:** NIST MEASURE-2 anchors the empirical-test side; MEASURE-3 specifically addresses adversarial robustness measurement. Together they describe a continuous testing posture.
+
+## Common pitfalls
+
+- **Treating red-teaming as a security-team-only activity.** ML engineers know the model's failure modes; security engineers know the attacker's playbook. Both are required.
+- **Running probe libraries without triaging findings.** Garak alone can produce hundreds of findings; without a triage discipline, they pile up and stop being read.
+- **Closing findings without testing the mitigation.** A mitigation that isn't covered by a regression test will regress on the next model update.
+- **Ignoring novel findings that don't fit existing categories.** The novel finding is the most valuable — it is the one that informs the catalogue update.
+
+## What's next
+
+Red-team findings (and their remediations) flow into [Documentation](/stages/08-documentation/) — the artefacts that prove the testing happened.

@@ -25,39 +25,190 @@ import RegQuote from '~/components/RegQuote.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
 import GlossaryTerm from '~/components/GlossaryTerm.astro';
 
-Data controls are the substrate of AI governance. Without provable data lineage, bias evaluation, and lawful basis, every other downstream artefact is constructed on sand.
+Data controls are the substrate of <GlossaryTerm term="AI governance" />. Without provable data lineage, bias evaluation, and lawful basis, every other downstream artefact is constructed on sand. The conformity-assessment file becomes unsupported. The risk-tier rationale becomes arguable. The incident-response runbook becomes guesswork.
+
+This stage explains the five data controls that any AI system needs, the DPIA structure required under UK / EU GDPR, and why retroactive data lineage is essentially impossible to construct after the fact.
 
 <MermaidJourney currentStage={6} />
 
-## What good data control looks like
+## The five data controls
 
-- **Lineage**: every training dataset traceable to its source, including consent or licence basis.
-- **Bias evaluation**: documented baseline performance across protected attributes.
-- **Lawful basis**: under UK GDPR / EU GDPR, an explicit lawful basis recorded per data category.
-- **Retention**: timed deletion + suppression-list integration with model retraining.
+### 1. Lineage
+
+Every training dataset traceable to its **source**, with:
+
+- The source URI or system-of-record reference
+- The fetch / extract timestamp
+- The licence terms (open data, vendor licence, internal data, consented user data)
+- The consent transaction ID (where applicable)
+- The retention schedule and deletion trigger
+
+Lineage starts at the ingestion pipeline, not at the model trainer. A dataset that arrives at the trainer without source metadata is uncatalogable; lineage cannot be reconstructed from the file contents alone.
+
+### 2. Quality attestation
+
+Per EU AI Act Article 10(2), training, validation, and testing datasets for high-risk systems must meet quality criteria covering:
+
+- Relevance to the intended use
+- Representativeness of the deployment population
+- Freedom from errors and statistical bias
+- Statistical properties relevant to intended persons or groups
+- Geographic, behavioural, or functional setting appropriateness
+
+The attestation is a written analysis, not a checkbox. For each criterion: how was it measured, what was the result, what action was taken on findings.
+
+### 3. Bias evaluation
+
+Documented performance variance across protected attributes (sex, race, age, disability, religion, political opinion, where lawful to measure). The baseline:
+
+- Headline metric (accuracy / precision / recall / F1) per protected-attribute slice
+- Confidence intervals
+- Threshold for "significant variance" that triggers remediation
+- Remediation log (what was tried, what worked)
+
+Bias evaluation is run **on the model**, not just on the training data. A balanced training set can still produce a biased model; an unbalanced training set can sometimes produce a model with acceptable per-group performance. Measure the actual behaviour.
+
+### 4. Lawful basis
+
+Under UK / EU GDPR Article 6, every category of personal-data processing requires a lawful basis. For AI workloads, the realistic candidates:
+
+- **Consent** (Art. 6(1)(a)) — explicit, granular, withdrawable. Hard to operate at scale because withdrawal triggers full re-training.
+- **Contract** (Art. 6(1)(b)) — processing necessary to deliver a contracted service. Often the cleanest basis for customer-facing AI features.
+- **Legitimate interests** (Art. 6(1)(f)) — balancing test required and documented. The fallback for many internal use-cases.
+- **Legal obligation** (Art. 6(1)(c)) — narrow; mostly applies to anti-money-laundering and similar regulated use-cases.
+
+For Art. 9 special-category data (health, biometrics, beliefs, sexual orientation, trade-union membership), an additional Art. 9(2) condition is required on top of the Art. 6 basis. Most AI workloads landing in this space rely on explicit consent (Art. 9(2)(a)), substantial public interest (Art. 9(2)(g)), or healthcare provision (Art. 9(2)(h)) — each with stricter conditions.
+
+### 5. Retention + suppression
+
+Data is retained no longer than necessary for the stated purpose. Retention schedules:
+
+- Cover both production data and training-set copies
+- Integrate with model retraining cadence (a deletion request from a data subject must propagate to the next training run)
+- Document **why** the retention period is the period chosen — "we keep customer data for 7 years because of [specific regulatory reason]," not "we keep customer data for 7 years because that's the default."
+
+Suppression-list integration is the operational consequence: when a data subject exercises a deletion right, their data is added to the suppression list, and the next training cycle excludes any data matching the list. This is **mechanically hard** if lineage is missing; it is straightforward if every record is tagged with its subject identifier.
+
+## The DPIA — the artefact that synthesises everything
+
+For most AI processing, a Data Protection Impact Assessment is **required** under GDPR Article 35(1). The ICO's AI guidance interprets the threshold expansively — essentially any AI processing of personal data clears it.
+
+A DPIA covers:
+
+1. **Description of processing**: what data, what purpose, what algorithm, what output.
+2. **Necessity and proportionality assessment**: why is AI processing the right approach, and is it minimised to the data actually needed?
+3. **Risks to data subjects**: bias, opacity, error rate, secondary use, security.
+4. **Mitigation measures**: technical (encryption, minimisation, monitoring) and organisational (training, oversight, audit).
+5. **Residual risk assessment**: what risk remains after mitigation, and is it acceptable?
+6. **Consultation evidence**: where high residual risk remains, prior consultation with the supervisory authority (Art. 36).
+
+The DPIA is **a living document**. Material changes to the system trigger a DPIA update; the DPIA cadence is wired into the Risk Check (Stage 3) cycle.
+
+## Three persona views
 
 <PersonaSection persona="exec">
 Data controls are the most likely place for a regulator to look first. They are also the cheapest to fix early and the most expensive to retrofit. Treat lineage as a first-class engineering deliverable.
+
+The leadership decision that determines outcomes: **does the data team report into the AI governance function, or only adjacent to it?** Where data and AI governance share a reporting line, lineage and bias evaluation get prioritised because the same person is accountable for both. Where they don't, the data team's roadmap diverges from the AI risk owner's needs.
+
+Budget realism:
+
+- A DPIA for a moderate-complexity AI system takes 3-5 person-weeks the first time, 1-2 person-weeks per update thereafter.
+- Backfilling lineage onto a system already in production costs roughly 10-50× the cost of building lineage from day one.
+- Suppression-list integration adds a recurring per-retraining-cycle cost (typically a few hours) plus an upfront engineering investment of 2-4 weeks.
+
+The expensive failure mode is **discovering missing lineage during a regulator inquiry.** At that point, the only options are admit-and-remediate or claim-and-defend; both are expensive, both attract more scrutiny.
 </PersonaSection>
 
 <PersonaSection persona="engineer">
-Lineage starts at the ingestion pipeline, not at the model trainer. Tag every dataset with source URI, fetch timestamp, licence string, and the consent transaction ID where applicable.
+Lineage starts at the ingestion pipeline, not at the model trainer. Tag every dataset at the ingestion boundary with:
+
+- Source URI
+- Fetch / extract timestamp
+- Licence string (machine-readable, e.g., SPDX identifier)
+- Consent transaction ID (where applicable)
+- Schema fingerprint (so downstream consumers can detect upstream schema drift)
+
+Concrete patterns:
+
+- **Datasets stored as `(content, manifest.json)` pairs.** The manifest is the lineage record; the content is the data. Both checksummed and stored together.
+- **An ingestion-time validation gate** that rejects datasets lacking required manifest fields. The build can't run training on an unmanifested dataset.
+- **Per-record subject ID** for any dataset containing personal data, so suppression lists can be enforced mechanically.
+- **A data-flow diagram** for each AI system, generated from the DAG of the data pipeline, kept in version control.
+
+The bias-evaluation harness lives in the same CI that runs the eval suite. Every model release produces a bias-eval report alongside the standard eval report. A regression on a per-protected-attribute metric beyond a threshold blocks the release.
 </PersonaSection>
 
 <PersonaSection persona="compliance">
-UK GDPR's DPIA threshold is essentially always triggered for AI processing. The ICO's AI guidance suite walks through lawful-basis selection, accuracy testing, and ADM transparency in operational detail.
+UK GDPR's DPIA threshold is essentially always triggered for AI processing. The ICO's AI guidance suite walks through lawful-basis selection, accuracy testing, ADM transparency, and explainability in operational detail.
+
+Pick the lawful basis carefully and document the reasoning. The most common audit finding: a DPIA that cites "legitimate interests" without recording the balancing test required under Art. 6(1)(f). The balancing test asks three questions, each documented in writing:
+
+1. **Purpose test**: is there a legitimate interest being pursued?
+2. **Necessity test**: is the processing necessary to achieve that interest, with no less-intrusive alternative?
+3. **Balancing test**: do the interests of the data subject override the legitimate interest?
+
+For Art. 9 special-category data, the Art. 9 condition stacks on top of the Art. 6 basis — and the analysis must cover both layers. A common error: documenting consent under Art. 9(2)(a) but failing to verify the consent meets the Art. 7 quality standards (specific, informed, unambiguous, freely-given, withdrawable).
+
+The DPIA is signed by the Data Protection Officer (where appointed) or the equivalent named role. Sign-off without a DPO is acceptable; sign-off by no one named is not.
 </PersonaSection>
 
-## Fictional company
+## Fictional company in narrative
 
-[Aurora Insurance London](/stories/aurora-insurance/) operates a single Data Controls Register keyed by dataset name. The register links to lineage, DPIA, bias-evaluation report, and the consuming model cards. Removing or modifying a dataset triggers a downstream re-check across every model that consumes it.
+[Aurora Insurance London](/stories/aurora-insurance/) operates a single **Data Controls Register** keyed by dataset name. The register links to: source-of-record, lawful-basis statement, DPIA, bias-evaluation report, retention schedule, and the consuming model cards. Removing or modifying a dataset triggers a downstream re-check across every model that consumes it.
+
+When a customer exercises a UK GDPR Article 17 right-to-erasure, the request flows through:
+
+1. The CRM marks the customer as opted-out and assigns a suppression token.
+2. An overnight job adds the token to the suppression list.
+3. The next model retraining cycle excludes any training records matching the suppression list.
+4. The DPIA is updated to reflect the new suppression-list state at the next quarterly review.
+
+The whole flow is automated; the human in the loop is the privacy team checking the suppression-list growth weekly.
+
+[Sigma Health Berlin](/stories/sigma-health/) operates under both EU AI Act (high-risk) and EU GDPR special-category provisions (clinical data). Their DPIA stacks the analyses: an Art. 6 basis (contract / provision of healthcare under Art. 9(2)(h)), an EU AI Act Art. 10 quality attestation, and a sector-specific clinical safety case. The DPIA is co-signed by the DPO, the AI Risk Owner, and the Chief Medical Officer. It is reviewed every quarter and re-signed at every material model release.
+
+## What "good" looks like
+
+Working data controls:
+
+- **Lineage** stored as `(content, manifest)` pairs at the ingestion boundary; manifest is mandatory.
+- **Quality attestation** as a per-dataset written analysis against EU AI Act Art. 10(2) criteria.
+- **Bias-evaluation** run automatically in CI, with per-protected-attribute reporting and a regression gate.
+- **Lawful basis** documented per processing operation, with balancing-test evidence where Art. 6(1)(f) is the basis.
+- **Retention schedule** that names the reason for the period chosen.
+- **Suppression-list integration** that propagates deletion requests through retraining.
+- **DPIA** signed, dated, reviewed quarterly, updated on material change.
+
+## What "bad" looks like
+
+- Training data with no manifest — provenance lost forever.
+- Bias evaluation only run at launch; not in CI.
+- Lawful basis written as "we processed under legitimate interests" without a balancing-test record.
+- Retention period "indefinite" or "as long as commercially relevant."
+- DPIA last updated 18 months ago; system has shipped four major versions since.
+
+## Required citations
 
 <RegQuote source="eu-ai-act" article="Art-10" snapshot="2026-05-24" regulationName="EU AI Act">
 High-risk AI systems which make use of techniques involving the training of models with data shall be developed on the basis of training, validation and testing data sets that meet the quality criteria referred to in paragraphs 2 to 5 whenever such data sets are used.
 </RegQuote>
 
-**Why this matters:** the data is the regulation's centre of gravity. If you cannot prove what data trained the model, you cannot defend the model's behaviour.
+**Why this matters:** the quality-criteria paragraphs (Art. 10(2)-(5)) operationalise "good data" for high-risk AI systems. Each criterion is auditable; each requires written attestation.
 
----
+<RegQuote source="uk-ico" article="DPIA-AI" snapshot="2026-05-24" regulationName="UK ICO AI guidance">
+You should carry out a DPIA for any high-risk processing involving AI. This includes innovative use of new technologies, large-scale processing of personal data, systematic processing of sensitive data, or use that could affect data subjects' rights.
+</RegQuote>
 
-Next: [Continuous Red-teaming](/stages/07-red-teaming/) — adversarial probing of the system you just built.
+**Why this matters:** the ICO's expansive reading of the DPIA threshold means almost every AI processing operation in the UK clears it. Assume a DPIA is required; document the rare exceptions.
+
+## Common pitfalls
+
+- **Treating bias evaluation as a one-time launch exercise.** Bias drifts with training-data drift. Continuous evaluation in CI is the only reliable approach.
+- **Documenting a lawful basis without supporting evidence.** Auditors ask for the balancing-test record; "we believe legitimate interests applies" is not the record.
+- **Forgetting retention schedules apply to training-set copies.** The production database honours the retention period; the model trainer's local copy frequently does not.
+- **Skipping the DPIA on internal-only systems.** Internal HR / workforce-management AI clears the DPIA threshold easily; "internal" does not exempt.
+
+## What's next
+
+Solid data controls feed into [Continuous Red-teaming](/stages/07-red-teaming/) — the adversarial counterpart that stress-tests the model the data produced.
