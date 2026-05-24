@@ -1,0 +1,10 @@
+{
+  "name": "@aigov/chat-worker",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'chat-worker scaffolds in Phase 5'",
+    "typecheck": "echo 'pending Phase 5'"
+  }
+}

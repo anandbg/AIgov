@@ -1,0 +1,10 @@
+{
+  "name": "@aigov/pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'pipeline scaffolds in Phase 3'",
+    "typecheck": "echo 'pending Phase 3'"
+  }
+}

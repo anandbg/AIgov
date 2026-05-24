@@ -1,0 +1,10 @@
+{
+  "name": "@aigov/embed-cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'embed-cli scaffolds in Phase 5'",
+    "typecheck": "echo 'pending Phase 5'"
+  }
+}
