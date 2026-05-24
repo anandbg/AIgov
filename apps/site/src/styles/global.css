@@ -177,3 +177,4 @@ button[aria-label]:not(.no-min):not(:has(span)),
     page-break-after: avoid;
   }
 }
+

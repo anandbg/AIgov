@@ -86,17 +86,25 @@ if (currentPhase) {
   styleLines.push(`  style P${currentPhase} fill:#eef2ff,stroke:#6366f1,stroke-width:1.5px`);
 }
 
+// Make every stage node a clickable link so the diagram itself is navigable
+// (Mermaid's `click` directive renders nodes as <a> elements wrapping the rect).
+const clickLines = stages.map((s) => {
+  const href = withBase(BASE, `/stages/${s.slug}/`);
+  return `  click ${s.id} "${href}" "${s.label}"`;
+});
+
 const diagram = [
   'flowchart TB',
   ...phaseLines,
   ...phaseLinks,
   ...styleLines,
+  ...clickLines,
 ].join('\n');
 ---
 <div class={wrapperClass}>
   <pre class="mermaid" data-mermaid-source>{diagram}</pre>
 
-  <details class="mermaid-fallback">
+  <details class="mermaid-fallback" open>
     <summary>List view of the 12-stage journey</summary>
     {phases.map((p) => (
       <section class="mermaid-fallback-phase">
@@ -120,57 +128,40 @@ const diagram = [
 </div>
 
 <script>
-  // astro-mermaid only transforms fenced mermaid blocks in .md/.mdx. Inside .astro
-  // components we drive mermaid client-side. Mermaid's render() returns trusted SVG;
-  // we use DOMParser to attach it as parsed DOM rather than via direct assignment.
-  import mermaid from 'mermaid';
-
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const initialTheme =
-    document.documentElement.dataset.theme === 'dark' ? 'dark' :
-    document.documentElement.dataset.theme === 'light' ? 'neutral' :
-    prefersDark ? 'dark' : 'neutral';
-
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: initialTheme,
-    securityLevel: 'strict',
-    flowchart: { curve: 'basis', useMaxWidth: true },
-  });
-
-  function adoptSvg(host: HTMLElement, svg: string): void {
-    // Parse the SVG string into a DOM Document; move the <svg> root into host.
-    // Avoids assigning to innerHTML.
-    const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
-    const svgEl = doc.documentElement;
-    while (host.firstChild) host.removeChild(host.firstChild);
-    host.appendChild(host.ownerDocument.importNode(svgEl, true));
-  }
-
-  async function renderAll() {
-    const blocks = document.querySelectorAll<HTMLPreElement>('pre.mermaid[data-mermaid-source]');
-    for (const block of blocks) {
-      if (block.dataset.mermaidRendered === 'true') continue;
-      try {
-        const src = block.textContent ?? '';
-        const id = 'm' + Math.random().toString(36).slice(2, 10);
-        const { svg } = await mermaid.render(id, src);
-        const host = document.createElement('div');
-        host.className = 'mermaid';
-        adoptSvg(host, svg);
-        block.replaceWith(host);
-        host.dataset.mermaidRendered = 'true';
-      } catch (err) {
-        console.error('mermaid render failed:', err);
-        block.dataset.mermaidError = String(err);
+  // The astro-mermaid integration already discovers `pre.mermaid` elements and
+  // renders them client-side with theme awareness. Running a second renderer
+  // (which this component previously did) double-bound the same pre tag,
+  // sometimes leaving Mermaid's "Syntax error in text — mermaid version 11.15.0"
+  // banner at the bottom of the page. We now defer entirely to astro-mermaid.
+  //
+  // After astro-mermaid replaces our pre with an SVG it can leave behind a
+  // stray sibling error element if a previous render failed mid-way. Sweep
+  // any such artefacts so they never reach the reader.
+  function sweepStrayMermaidErrors(): void {
+    document.querySelectorAll('div.mermaid[data-processed]').forEach((el) => {
+      // ok
+    });
+    document.querySelectorAll('[id^="dmermaid-"], [id^="mermaid-svg-"]').forEach((el) => {
+      // mermaid's own scratch nodes shouldn't survive past render
+      const parent = el.parentElement;
+      if (parent && parent.tagName === 'BODY' && !el.closest('.mermaid-journey')) {
+        el.remove();
       }
-    }
+    });
+    // Anything Mermaid printed inline as a fallback error
+    document.querySelectorAll('div, pre').forEach((el) => {
+      const text = el.textContent ?? '';
+      if (/Syntax error in text/.test(text) && /mermaid version/.test(text)) {
+        if (!el.closest('.mermaid-journey')) el.remove();
+      }
+    });
   }
-
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => { void renderAll(); });
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(sweepStrayMermaidErrors, 1500);
+    });
   } else {
-    void renderAll();
+    setTimeout(sweepStrayMermaidErrors, 1500);
   }
 </script>
 

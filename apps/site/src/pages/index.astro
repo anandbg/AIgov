@@ -1,21 +1,394 @@
 ---
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import MermaidJourney from '~/components/MermaidJourney.astro';
+import { withBase } from '@aigov/shared';
+const BASE = import.meta.env.BASE_URL;
+const link = (p: string) => withBase(BASE, p);
 ---
 <StarlightPage frontmatter={{ title: 'AI Governance — plain language, current weekly', tableOfContents: false }}>
-  <p><strong>AI governance</strong> is the set of decisions and habits that keep a company in control of the AI it uses — instead of the other way around. It is what the board, the regulator, the customer, and the curious new hire all want to understand the moment they hear "we're using AI."</p>
 
-  <p>This site is the plain-language version. No jargon, no legal Latin, no pretending you should have already read 500 pages of legislation. Just twelve clear steps, in everyday words, that take you from <em>"we use AI"</em> to <em>"we govern AI"</em> — with the actual laws, standards, and real-world examples linked alongside.</p>
+  {/* ============ Hero ============ */}
+  <p class="hero-lede">
+    <strong>AI governance</strong> is the set of decisions and habits that keep a
+    company in control of the AI it uses — instead of the other way around. It is
+    what the board, the regulator, the customer, and the curious new hire all
+    want to understand the moment they hear <em>"we're using AI."</em>
+  </p>
 
-  <p>Read the map below like a journey: four phases, twelve stages. Each box is a click — and every page is written for someone who has never done this before.</p>
+  <p>
+    This site is the plain-language version. No jargon, no legal Latin, no
+    pretending you should have already read 500 pages of legislation. Twelve
+    clear steps, in everyday words, that take you from <em>"we use AI"</em> to
+    <em>"we govern AI"</em> — with the actual laws, standards, and real-world
+    examples linked alongside.
+  </p>
+
+  {/* ============ What is AI governance, in detail ============ */}
+  <h2 id="what-is-ai-governance">What is AI governance, really?</h2>
+
+  <p>
+    Imagine your company starts using AI: a chatbot for customers, an internal
+    tool that summarises meeting notes, a model that helps decide which
+    insurance claims look suspicious. Each one of those is a powerful piece of
+    machinery — and like any powerful machinery, it can save you a fortune or
+    cause real harm depending on how you build it, who you let near it, and
+    what you do when it misbehaves.
+  </p>
+
+  <p>
+    <strong>AI governance is the practical answer to three simple questions:</strong>
+  </p>
+
+  <ol class="big-questions">
+    <li>
+      <strong>What are we allowed to do with AI here?</strong>
+      <span> The rules your company has set, and the laws that apply to you.</span>
+    </li>
+    <li>
+      <strong>How do we know the AI is doing what we said it would?</strong>
+      <span> The testing, the documentation, the named people on the hook.</span>
+    </li>
+    <li>
+      <strong>What do we do when something goes wrong?</strong>
+      <span> Because eventually it will — incidents, drift, surprises, complaints.</span>
+    </li>
+  </ol>
+
+  <p>
+    The good news: this is not new ground. Aviation, medicine, banking, food
+    safety, electrical work — every powerful industry built its own playbook
+    over decades. AI is doing the same, in years rather than decades, and this
+    site walks you through that playbook one stage at a time.
+  </p>
+
+  {/* ============ How to use this site ============ */}
+  <h2 id="how-to-use">How to use this site</h2>
+
+  <p>There are three ways in. Pick whichever feels right.</p>
+
+  <ol class="how-cards">
+    <li>
+      <strong>Read the journey in order.</strong>
+      <span>
+        Start with <a href={link('/stages/01-ai-policy/')}>Stage 1 — AI Policy</a>
+        and click through to stage 12. Each page takes about 8 minutes. The
+        whole journey is roughly an afternoon's reading and gives you a complete
+        mental model.
+      </span>
+    </li>
+    <li>
+      <strong>Jump to what you need.</strong>
+      <span>
+        Use the sidebar (left, or hamburger menu on mobile) or click any stage
+        in the diagram below. Each stage page stands on its own — no need to
+        read the earlier ones first.
+      </span>
+    </li>
+    <li>
+      <strong>Try the <a href={link('/wizard/')}>wizard</a>.</strong>
+      <span>
+        Five quick questions and you get a personalised checklist of governance
+        topics to take to your lawyer. No personal data leaves your browser.
+      </span>
+    </li>
+  </ol>
+
+  <p>
+    Every stage page opens with an <strong>"In plain English"</strong> section
+    that explains the topic the way you'd explain it to a friend over coffee.
+    Below that you'll find three lenses — <strong>Executive</strong>,
+    <strong>Engineer</strong>, and <strong>Compliance</strong> — so each reader
+    can jump to the angle that speaks to them. A recurring cast of fictional
+    companies (a Berlin hospital, a London insurer, a Tokyo logistics firm, a US
+    robotics maker) threads real scenarios through the narrative so concepts
+    always come back to something you can picture.
+  </p>
+
+  {/* ============ The journey diagram ============ */}
+  <h2 id="the-journey">The 12-stage AI governance journey</h2>
+
+  <p>
+    Read the map below like a journey: <strong>four phases, twelve stages</strong>.
+    Every box is a click. Below the diagram you'll find a plain-language
+    summary of each phase so you can spot which one applies to your situation.
+  </p>
 
   <MermaidJourney />
 
-  <p>Every stage page opens with an <strong>"In plain English"</strong> section that explains the topic the way you'd explain it to a friend over coffee. Below that, you'll find three lenses — <strong>executive</strong>, <strong>engineer</strong>, and <strong>compliance</strong> — so each reader can jump to the bit that speaks to them. A recurring cast of fictional companies (a Berlin hospital, a London insurer, a Tokyo logistics firm, a US robotics maker) threads real scenarios through the narrative, so the concepts always come back to something you can picture.</p>
+  {/* ============ Phase explanations alongside the diagram ============ */}
+  <h2 id="phases-in-plain-english">What each phase actually means</h2>
 
-  <p><strong>Where we are:</strong> Phase 2 — Content Spine. All twelve stage explainers are live. The weekly "what changed in the world of AI regulation" tracker lands in Phase 3.</p>
+  <section class="phase-card phase-1">
+    <header>
+      <span class="phase-badge">Phase 1</span>
+      <h3>Set the rules</h3>
+      <p class="phase-tag">Decide what your company will — and won't — do with AI.</p>
+    </header>
+    <p>
+      Before you build, buy, or deploy a single AI feature, your company needs
+      to agree (in writing) on the basics: which uses of AI are welcome, which
+      are off-limits, and who decides when something falls in the grey zone.
+      Without this, every team will quietly make up their own rules — and a
+      year later nobody can explain why one team's chatbot is fine and
+      another's was shut down.
+    </p>
+    <ul>
+      <li>
+        <a href={link('/stages/01-ai-policy/')}><strong>1 · AI Policy</strong></a> —
+        the short written document that says <em>"here's what we'll do, here's what
+        we won't, here's who owns each call."</em>
+      </li>
+      <li>
+        <a href={link('/stages/02-risk-tiering/')}><strong>2 · Risk Tiering</strong></a> —
+        rating each AI system before you build it: is it banned, high-risk,
+        moderate, or routine? The rating decides how much paperwork follows.
+      </li>
+      <li>
+        <a href={link('/stages/03-risk-check/')}><strong>3 · Risk Check</strong></a> —
+        rechecking each system as things change. New data, new users, new
+        regulators — the rating from day one rarely stays true.
+      </li>
+    </ul>
+  </section>
+
+  <section class="phase-card phase-2">
+    <header>
+      <span class="phase-badge">Phase 2</span>
+      <h3>Make it legal & safe</h3>
+      <p class="phase-tag">Meet the laws. Vet your suppliers. Protect your data.</p>
+    </header>
+    <p>
+      Powerful machinery is regulated for a reason. The EU AI Act, GDPR, sector
+      rules in finance and healthcare, US state laws — all of them apply to
+      what your AI does, not what it's called. Phase 2 is the unglamorous but
+      unavoidable work of producing the evidence that you're inside the lines.
+      It also covers the AI you didn't build yourself (most of it, in practice)
+      and the data running through all of it.
+    </p>
+    <ul>
+      <li>
+        <a href={link('/stages/04-compliance/')}><strong>4 · Compliance</strong></a> —
+        the folder of evidence that proves your AI meets the laws and standards
+        that apply where you operate.
+      </li>
+      <li>
+        <a href={link('/stages/05-third-party-risk/')}><strong>5 · Third-party AI Risk</strong></a> —
+        governing the models, APIs, and SaaS tools you <em>bought</em>. Your name
+        is over the door even when someone else built the model inside.
+      </li>
+      <li>
+        <a href={link('/stages/06-data-controls/')}><strong>6 · Data Controls</strong></a> —
+        knowing where every piece of data came from, who can see it, and how
+        long you keep it. AI is mostly data; ungoverned data means ungoverned AI.
+      </li>
+    </ul>
+  </section>
+
+  <section class="phase-card phase-3">
+    <header>
+      <span class="phase-badge">Phase 3</span>
+      <h3>Prove it works</h3>
+      <p class="phase-tag">Stress-test the AI. Document everything. Name who's on the hook.</p>
+    </header>
+    <p>
+      Once your AI runs in production, regulators, customers, and your own
+      board will want to see proof — not promises — that it works as claimed,
+      that it's been deliberately tested for ways to break it, and that there
+      is a clear human on the line if something goes wrong. Phase 3 is where
+      the evidence file gets built. Skip it and you'll spend the rest of your
+      AI's life reconstructing it under deadline pressure.
+    </p>
+    <ul>
+      <li>
+        <a href={link('/stages/07-red-teaming/')}><strong>7 · Continuous Red-teaming</strong></a> —
+        deliberately trying to fool, jailbreak, or trip up your AI — over and
+        over, forever — so that you find the failure modes before a real user
+        does.
+      </li>
+      <li>
+        <a href={link('/stages/08-documentation/')}><strong>8 · Documentation</strong></a> —
+        writing down what the AI is, how it was built, what it's good at, what
+        it's bad at, who tested it, and who signed it off — in language a
+        non-engineer can read.
+      </li>
+      <li>
+        <a href={link('/stages/09-accountability/')}><strong>9 · Accountability</strong></a> —
+        naming the role (not the person) responsible at every decision: build,
+        launch, run, stop, explain.
+      </li>
+    </ul>
+  </section>
+
+  <section class="phase-card phase-4">
+    <header>
+      <span class="phase-badge">Phase 4</span>
+      <h3>Run and watch</h3>
+      <p class="phase-tag">Supervise live AI. Handle incidents. Keep an eye on it forever.</p>
+    </header>
+    <p>
+      Launching the AI is the beginning, not the end. The world changes, the
+      data changes, the rules change, users get more creative. Phase 4 is the
+      ongoing work of keeping a live AI system honest — special care for AI
+      that <em>acts</em> (not just answers), a rehearsed playbook for the day
+      something breaks, and continuous monitoring so you spot drift before a
+      customer complains on social media.
+    </p>
+    <ul>
+      <li>
+        <a href={link('/stages/10-agentic-oversight/')}><strong>10 · Agentic AI Oversight</strong></a> —
+        special governance for AI that <em>does things</em> on its own (sends
+        emails, spends money, writes code), not just AI that answers questions.
+      </li>
+      <li>
+        <a href={link('/stages/11-incident-response/')}><strong>11 · Incident Response</strong></a> —
+        the rehearsed playbook for when the AI goes wrong: detect, contain,
+        notify, fix, learn. The deadlines for regulator notifications are short
+        and unforgiving.
+      </li>
+      <li>
+        <a href={link('/stages/12-monitoring/')}><strong>12 · Monitoring</strong></a> —
+        the dashboards, alerts, and quiet daily eyes-on-it that keep the AI
+        from quietly degrading. Findings here loop you back to Phase 1.
+      </li>
+    </ul>
+  </section>
+
+  {/* ============ Closing ============ */}
+  <h2 id="start-here">Where to start</h2>
+
+  <p>
+    If you only have ten minutes, open
+    <a href={link('/stages/01-ai-policy/')}>Stage 1 — AI Policy</a> and read
+    the <em>In plain English</em> section. It is the most important page on the
+    site. Almost everything that goes wrong in AI governance starts with the
+    organisation not having written down what it will and won't do.
+  </p>
+
+  <p>
+    If you want to know what's changed in the world of AI regulation recently,
+    open <a href={link('/whats-new/')}>What's new</a>. Once the tracking pipeline
+    is fully live (Phase 3), this page lists every detected change with a link
+    to the dated snapshot.
+  </p>
+
+  <p>
+    <strong>Where this site is right now:</strong> All twelve stage explainers
+    are live in plain language. The weekly "what changed in AI regulation"
+    tracker is being wired up next.
+  </p>
 
   <hr />
 
-  <p><small>This site explains AI governance in plain language. It is <strong>not legal advice</strong>. Talk to a qualified lawyer before acting on anything you read here.</small></p>
+  <p>
+    <small>
+      This site explains AI governance in plain language. It is
+      <strong>not legal advice</strong>. Talk to a qualified lawyer before acting
+      on anything you read here.
+    </small>
+  </p>
+
 </StarlightPage>
+
+<style>
+  .hero-lede {
+    font-size: 1.15rem;
+    line-height: 1.55;
+  }
+  .big-questions {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    gap: 12px;
+    margin: 16px 0 24px;
+  }
+  .big-questions li {
+    background: var(--sl-color-bg-sidebar);
+    border-left: 3px solid var(--sl-color-accent);
+    border-radius: 6px;
+    padding: 12px 14px;
+    line-height: 1.55;
+  }
+  .big-questions li strong { display: block; margin-bottom: 4px; }
+  .big-questions li span { color: var(--sl-color-text-muted); font-size: 0.95rem; }
+
+  .how-cards {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin: 16px 0 24px;
+  }
+  @media (min-width: 48em) {
+    .how-cards { grid-template-columns: repeat(3, 1fr); }
+  }
+  .how-cards li {
+    background: var(--sl-color-bg-sidebar);
+    border-radius: 8px;
+    padding: 14px 16px;
+    border-top: 3px solid var(--sl-color-accent);
+  }
+  .how-cards li strong { display: block; margin-bottom: 6px; font-size: 1rem; }
+  .how-cards li span { color: var(--sl-color-text); font-size: 0.92rem; line-height: 1.5; }
+
+  .phase-card {
+    margin: 18px 0;
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--sl-color-bg-sidebar);
+    border-left: 4px solid var(--sl-color-accent);
+  }
+  .phase-card header { margin-bottom: 8px; }
+  .phase-badge {
+    display: inline-block;
+    font-family: var(--font-mono, ui-monospace);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--sl-color-accent);
+    background: var(--sl-color-bg);
+    border: 1px solid var(--sl-color-accent);
+    border-radius: 999px;
+    padding: 2px 10px;
+    margin-bottom: 6px;
+  }
+  .phase-card h3 {
+    margin: 6px 0 2px;
+    font-size: 1.3rem;
+  }
+  .phase-tag {
+    margin: 0 0 8px;
+    color: var(--sl-color-text-muted);
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+  .phase-card > p {
+    line-height: 1.6;
+    margin: 8px 0 12px;
+  }
+  .phase-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 8px;
+  }
+  .phase-card ul li {
+    padding: 8px 10px;
+    background: var(--sl-color-bg);
+    border-radius: 6px;
+    line-height: 1.5;
+    font-size: 0.95rem;
+  }
+  .phase-card ul li a strong { color: var(--sl-color-accent); }
+
+  /* Phase-specific accent tints for visual rhythm */
+  .phase-1 { border-left-color: #6366f1; }
+  .phase-2 { border-left-color: #0891b2; }
+  .phase-3 { border-left-color: #16a34a; }
+  .phase-4 { border-left-color: #d97706; }
+  .phase-1 .phase-badge { color: #6366f1; border-color: #6366f1; }
+  .phase-2 .phase-badge { color: #0891b2; border-color: #0891b2; }
+  .phase-3 .phase-badge { color: #16a34a; border-color: #16a34a; }
+  .phase-4 .phase-badge { color: #d97706; border-color: #d97706; }
+</style>
