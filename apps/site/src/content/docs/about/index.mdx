@@ -1,0 +1,36 @@
+---
+title: About this site
+description: Single-author solo-maintained AI governance knowledge base. Transparent about how it works and how to contribute.
+---
+
+import DensityStatus from '~/components/DensityStatus.astro';
+import HeartbeatStatus from '~/components/HeartbeatStatus.astro';
+import { MAINTAINER_NAME, REPO_URL } from '~/config/site';
+
+This site explains AI governance in plain language and tracks the world's authoritative regulations and vendor frameworks. It is maintained by one person — {MAINTAINER_NAME} — as an open, no-tracking, no-ads, public knowledge resource.
+
+<h2 id="sustainability">Sustainability</h2>
+
+**This site is maintained by one person.** If something breaks, expect 24–72 hours to a fix during normal operations. During declared sustainability mode (banner visible site-wide), expect a weekly cadence instead of daily. If maintenance pauses for longer than two weeks, the README will say so. <a href={`${REPO_URL}/issues/new?labels=co-maintainer-interest`}>Co-maintainer wanted →</a>
+
+See <a href={`${REPO_URL}/blob/main/MAINTENANCE.md`}>MAINTENANCE.md</a> for the full operational model: weekly review cap, escalation path, graceful sunset plan.
+
+<h2 id="density">Density</h2>
+
+**Public launch is gated on density.** The site stays private until: 12 stage explainers authored • ≥60 glossary terms • ≥30 regulation snapshots tracked.
+
+<DensityStatus />
+
+<h2 id="operations">Operations</h2>
+
+The pipeline runs unattended on a schedule and surfaces noise-free PRs for review. Per-source heartbeats track when each scheduled job last ran successfully.
+
+<HeartbeatStatus />
+
+## How to contribute
+
+See <a href={`${REPO_URL}/blob/main/CONTRIBUTING.md`}>CONTRIBUTING.md</a>. Briefly: edit the Markdown, follow the voice rules (no "you should", no marketing words), open a PR. The site has zero tracking and never will. No cookies, no analytics that retain PII, no third-party CDN.
+
+## Disclaimer
+
+This site explains AI governance. It is not legal advice. Consult qualified counsel before acting on any content.
