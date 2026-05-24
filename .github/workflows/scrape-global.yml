@@ -31,8 +31,18 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Scrape NIST AI RMF
-        run: pnpm --filter @aigov/pipeline run-source nist-ai-rmf
+      - name: Scrape all global regulations & frameworks
+        # Runs every adapter in the `global` group:
+        #   nist-ai-rmf, eu-ai-act, uk-ico, iso-iec-42001
+        # A per-source failure is logged but does not block the rest.
+        if: ${{ github.event_name == 'schedule' || github.event.inputs.source == '' }}
+        run: pnpm --filter @aigov/pipeline run-group global
+
+      - name: Scrape single source (manual dispatch only)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.source != '' }}
+        env:
+          SOURCE: ${{ github.event.inputs.source }}
+        run: pnpm --filter @aigov/pipeline run-source "$SOURCE"
       - name: Update heartbeat
         run: |
           mkdir -p .heartbeat

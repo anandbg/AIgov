@@ -9,7 +9,8 @@
   "scripts": {
     "build": "echo 'pipeline runs via tsx — no build step'",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "run-source": "tsx src/cli/index.ts run"
+    "run-source": "tsx src/cli/index.ts run",
+    "run-group": "tsx src/cli/index.ts run-group"
   },
   "dependencies": {
     "@aigov/shared": "workspace:*",

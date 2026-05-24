@@ -1,0 +1,86 @@
+name: Scrape — vendor policies
+
+# Vendor terms-of-service / usage policies change without notice (Anthropic
+# amended its AUP twice in 2025). Polling daily catches a substantive change
+# within 24 hours; the meaningful-diff filter suppresses editorial noise so
+# the maintainer only sees PRs that need attention.
+
+on:
+  schedule:
+    - cron: '0 9 * * *'   # 09:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Single vendor source slug (blank = all vendors)'
+        required: false
+        default: ''
+
+concurrency:
+  group: scrape-vendors
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    env:
+      EVENT_NAME: ${{ github.event_name }}
+      INPUT_SOURCE: ${{ github.event.inputs.source }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Scrape vendor policies
+        # Group: openai-usage-policy, anthropic-aup, google-ai-principles
+        # On schedule or blank manual-dispatch input → run the whole group.
+        # On manual dispatch with an input → run only that source.
+        run: |
+          set -e
+          if [[ "$EVENT_NAME" == "workflow_dispatch" && -n "$INPUT_SOURCE" ]]; then
+            pnpm --filter @aigov/pipeline run-source "$INPUT_SOURCE"
+          else
+            pnpm --filter @aigov/pipeline run-group vendors
+          fi
+
+      - name: Update heartbeat
+        run: |
+          mkdir -p .heartbeat
+          cat > .heartbeat/last-run-scrape-vendors.json <<EOF
+          {
+            "source": "scrape-vendors",
+            "lastRun": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "ok": true,
+            "expectedCadence": "daily (09:00 UTC)"
+          }
+          EOF
+
+      - name: Open PR if vendor snapshots changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            BRANCH="scrape/vendors-$(date -u +%Y%m%d)"
+            git checkout -b "$BRANCH"
+            git add apps/site/src/content/regulations/ .heartbeat/
+            git commit -m "data(vendors): daily scrape $(date -u +%Y-%m-%d)"
+            git push -u origin "$BRANCH"
+            gh pr create \
+              --title "data(vendors): daily scrape $(date -u +%Y-%m-%d)" \
+              --body "Automated vendor-policy scrape. Review the diff — vendor AUPs frequently update silently, so any substantive change deserves a quick eyes-on before merge." \
+              --label "scrape,scope-vendors" \
+              --base main
+          else
+            echo "No changes — skipping PR creation"
+          fi

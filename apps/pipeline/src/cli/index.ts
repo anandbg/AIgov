@@ -17,17 +17,33 @@ import type { SourceAdapter } from "../lib/source-adapter.js";
 import { isMeaningful } from "../lib/meaningful.js";
 
 import nist from "../sources/nist-ai-rmf/index.js";
+import euAiAct from "../sources/eu-ai-act/index.js";
+import ukIco from "../sources/uk-ico/index.js";
+import isoIec42001 from "../sources/iso-iec-42001/index.js";
+import openaiPolicy from "../sources/openai-usage-policy/index.js";
+import anthropicAup from "../sources/anthropic-aup/index.js";
+import googlePrinciples from "../sources/google-ai-principles/index.js";
 
 // Resolve the repo root from this file's location so the CLI works regardless of cwd.
 // apps/pipeline/src/cli/index.ts → ../../../../ is the repo root.
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 
 const SOURCES: Record<string, SourceAdapter> = {
+  // === regulations & frameworks (weekly cadence) ===
   "nist-ai-rmf": nist,
-  // TRK-03: register additional sources here as adapters land.
-  // "eu-ai-act": euAiAct,
-  // "uk-ico": ukIco,
-  // ...
+  "eu-ai-act": euAiAct,
+  "uk-ico": ukIco,
+  "iso-iec-42001": isoIec42001,
+  // === vendor policies (daily cadence — terms change without notice) ===
+  "openai-usage-policy": openaiPolicy,
+  "anthropic-aup": anthropicAup,
+  "google-ai-principles": googlePrinciples,
+};
+
+/** Source groups for the workflow runners. */
+export const SOURCE_GROUPS = {
+  global: ["nist-ai-rmf", "eu-ai-act", "uk-ico", "iso-iec-42001"],
+  vendors: ["openai-usage-policy", "anthropic-aup", "google-ai-principles"],
 };
 
 const SITE_REGULATIONS_DIR = path.join(REPO_ROOT, "apps/site/src/content/regulations");
@@ -83,10 +99,36 @@ async function list() {
   }
 }
 
+/**
+ * Run every source in a named group and return a non-zero exit code only if
+ * *all* sources fail. Per-source errors are logged but do not block the rest
+ * of the group — the goal is to keep the weekly job moving even when one
+ * regulator changes its URL.
+ */
+async function runGroup(groupName: keyof typeof SOURCE_GROUPS) {
+  const group = SOURCE_GROUPS[groupName];
+  if (!group) {
+    console.error(`unknown group "${groupName}". Available: ${Object.keys(SOURCE_GROUPS).join(", ")}`);
+    process.exit(1);
+  }
+  let failures = 0;
+  for (const sourceId of group) {
+    try {
+      await run(sourceId);
+    } catch (err) {
+      failures++;
+      console.error(`[${sourceId}] FAILED: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+  console.log(`group "${groupName}" — ${group.length - failures}/${group.length} sources captured`);
+  if (failures === group.length) process.exit(1);
+}
+
 const [, , cmd, arg] = process.argv;
 if (cmd === "run" && arg) await run(arg);
+else if (cmd === "run-group" && arg) await runGroup(arg as keyof typeof SOURCE_GROUPS);
 else if (cmd === "list") await list();
 else {
-  console.error("usage: aigov-pipeline <run <source>|list>");
+  console.error("usage: aigov-pipeline <run <source>|run-group <global|vendors>|list>");
   process.exit(1);
 }
