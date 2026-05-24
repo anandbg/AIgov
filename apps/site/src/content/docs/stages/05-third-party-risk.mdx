@@ -1,0 +1,67 @@
+---
+title: "5. Third-party AI Risk"
+description: "How to govern AI systems your vendors built — without the controls you have over your own."
+stage: 5
+subtitle: "The vendor-shaped hole in most AI governance programmes."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-25"]
+    relevance: core
+    note: "Provider/deployer responsibility split — when do you become a provider by modifying a third-party system?"
+  - source: nist-ai-rmf
+    articles: ["MAP-4", "MANAGE-3"]
+    relevance: supporting
+  - source: iso-iec-42001
+    articles: ["Annex-A.6", "Annex-A.10"]
+    relevance: supporting
+prerequisites: [ai-policy, risk-tiering, compliance]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+The hardest <GlossaryTerm term="AI governance" /> question most organisations face is "we did not train this model — what are we still responsible for?" Third-party AI risk is the discipline of answering that question per-vendor, per-use.
+
+<MermaidJourney currentStage={5} />
+
+## Vendor governance checklist
+
+For every AI vendor:
+
+- What contractual data-use limits are in place? Are training-on-your-data rights explicitly excluded?
+- What is the vendor's own AI policy? (Many will share on request.)
+- Where is the model hosted, and which jurisdiction's law applies?
+- How do you receive notice of material model changes?
+
+<PersonaSection persona="exec">
+The procurement contract is where this work happens. Bake AI-specific clauses into your standard MSA before the next vendor renewal — retroactive amendments rarely succeed.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Build a vendor inventory at the system level, not the contract level. One vendor selling three products with three different model architectures requires three risk records.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+EU AI Act Article 25(1) shifts you from deployer to provider when you substantially modify a high-risk system. Fine-tuning a third-party foundation model often crosses that line. Document the boundary explicitly.
+</PersonaSection>
+
+## Fictional company
+
+[Densha Logistics Tokyo](/stories/densha-logistics/) uses a third-party route-optimisation model from a Singapore vendor. Their vendor contract requires 30 days' notice of any change to the model's training data or architecture. The notice triggers an internal risk-tier re-check (Stage 3).
+
+<RegQuote source="eu-ai-act" article="Art-25" snapshot="2026-05-24" regulationName="EU AI Act">
+Any distributor, importer, deployer or other third-party shall be considered to be a provider of a high-risk AI system for the purposes of this Regulation and shall be subject to the obligations of the provider under Article 16, in any of the following circumstances: (a) they put their name or trademark on a high-risk AI system already placed on the market or put into service; (b) they make a substantial modification to a high-risk AI system that has already been placed on the market or has already been put into service.
+</RegQuote>
+
+**Why this matters:** the provider/deployer line determines who carries the conformity-assessment burden. Cross it accidentally and you inherit obligations you did not budget for.
+
+---
+
+Next: [Data Controls](/stages/06-data-controls/) — the substrate every AI system runs on.

@@ -1,0 +1,21 @@
+---
+import Default from '@astrojs/starlight/components/SocialIcons.astro';
+import PersonaSwitch from './PersonaSwitch.astro';
+---
+<div class="header-actions">
+  <PersonaSwitch />
+  <Default />
+</div>
+
+<style>
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  @media (max-width: 50rem) {
+    .header-actions {
+      gap: 6px;
+    }
+  }
+</style>

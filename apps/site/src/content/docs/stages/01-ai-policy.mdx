@@ -1,0 +1,65 @@
+---
+title: "1. AI Policy"
+description: "The internal commitment document that defines what your organisation will and won't do with AI."
+stage: 1
+subtitle: "Where the AI governance journey starts — a writable artefact that survives leadership changes."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-1", "Art-2"]
+    relevance: supporting
+    note: "Sets the scope of obligations your policy must anticipate."
+  - source: iso-iec-42001
+    articles: ["Clause-5", "Clause-6"]
+    relevance: core
+    note: "AIMS policy + planning clauses map directly to the AI policy artefact."
+prerequisites: []
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+An <GlossaryTerm term="AI governance" /> programme starts with a written policy. Without it, every other stage in this journey runs on tacit assumptions that change with leadership and budget cycles. The policy is the artefact that survives.
+
+<MermaidJourney currentStage={1} />
+
+## What the policy actually contains
+
+An AI policy is not a marketing statement. It is the binding internal document that names:
+
+- The categories of AI systems your organisation will build, buy, or deploy.
+- The risk tiers (see [Risk Tiering](/stages/02-risk-tiering/)) that gate approval.
+- The owners of each downstream control: red-teaming, monitoring, incident response.
+- What is explicitly off-limits (e.g., emotion recognition in workplaces, biometric categorisation).
+
+<PersonaSection persona="exec">
+The policy is the artefact your board, your insurer, and your auditor will all read first. It is more durable than any quarterly KPI. Treat it as a controlled document with version history.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Every system you build will be classified against this policy. The earlier engineering input lands in the policy text, the less rework later. Push back on language that conflates "high-risk" tier with "anything using ML."
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+The AI policy is the parent document for your AIMS (per ISO/IEC 42001). It satisfies the EU AI Act's Article-9 risk-management-system documentation requirements when paired with the per-system risk file.
+</PersonaSection>
+
+## The fictional company perspective
+
+[Sigma Health Berlin](/stories/sigma-health/) drafted their AI policy in eight weeks. The hardest section was the off-limits list — leadership wanted to "leave options open" while regulatory counsel pushed for explicit exclusions. They landed on a hybrid: a narrow off-limits list plus a "needs board approval" gate for novel use-cases.
+
+<RegQuote source="iso-iec-42001" article="Clause-5.2" snapshot="2026-05-24" regulationName="ISO/IEC 42001">
+Top management shall establish, implement and maintain an AI policy that is appropriate to the purpose of the organisation, provides a framework for setting AI objectives, includes a commitment to satisfy applicable requirements, and includes a commitment to continual improvement of the AI management system.
+</RegQuote>
+
+**Why this matters:** the policy is the only thing that holds when the team that built the system leaves. Make it short, make it readable, and make sure the owners named in it actually know they're named.
+
+---
+
+This stage is the entry point. The next stage — [Risk Tiering](/stages/02-risk-tiering/) — is where the policy starts having teeth.

@@ -1,0 +1,62 @@
+---
+title: "12. Monitoring"
+description: "The always-on telemetry that closes the loop from production behaviour back to risk-check and policy."
+stage: 12
+subtitle: "The signal layer that decides whether the rest of the programme is working."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-72"]
+    relevance: core
+    note: "Post-market monitoring obligation — providers must collect, document, analyse data from deployment."
+  - source: nist-ai-rmf
+    articles: ["MEASURE-1", "MANAGE-4"]
+    relevance: core
+prerequisites: [incident-response, accountability]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+Monitoring is the always-on telemetry layer that feeds every other stage. Drift detection, fairness regression, latency outliers, refusal rates — these are the signals that decide whether the controls you built are still working.
+
+<MermaidJourney currentStage={12} />
+
+## What to actually monitor
+
+- **Quality signals** — accuracy on a calibrated holdout, refusal-rate stability, hallucination markers.
+- **Bias signals** — performance deltas across protected attributes; drift bounds.
+- **Operational signals** — latency, error rate, cost per request, rate of human escalations.
+- **Safety signals** — guardrail triggers, jailbreak attempts, kill-switch trips.
+
+<PersonaSection persona="exec">
+Monitoring is the operating-budget line item that scales with system count. Pre-buy the storage and alert capacity before launching the third high-risk system.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Treat the monitoring dashboard as a contract: every signal in production should have a documented owner, threshold, and pager destination. Signals with no owner get muted within a quarter.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+Article 72 post-market monitoring obligations are usually satisfied by reusing your existing observability stack with AI-specific signals. Document the mapping — auditors look for the explicit thread.
+</PersonaSection>
+
+## Fictional company
+
+[Acme Robotics US](/stories/acme-robotics/) routes warehouse-navigation telemetry through their existing Datadog account, with AI-specific dashboards for collision-avoidance refusal rate, route-deviation distribution, and human-takeover frequency. Anomaly detection on the takeover-frequency signal is the primary trigger for an unscheduled risk check.
+
+<RegQuote source="eu-ai-act" article="Art-72" snapshot="2026-05-24" regulationName="EU AI Act">
+Providers of high-risk AI systems shall establish and document a post-market monitoring system in a manner that is proportionate to the nature of the artificial intelligence technologies and the risks of the high-risk AI system. The post-market monitoring system shall actively and systematically collect, document and analyse relevant data which may be provided by deployers or which may be collected through other sources on the performance of high-risk AI systems throughout their lifetime.
+</RegQuote>
+
+**Why this matters:** the difference between a governance programme that produces evidence and one that produces theatre is whether monitoring signals actually feed back into risk check and policy.
+
+---
+
+That closes the journey. Return to [AI Policy](/stages/01-ai-policy/) and the policy artefact you started with — Monitoring is what tells you whether that document is still describing the system it was meant to govern.

@@ -1,0 +1,64 @@
+---
+title: "9. Accountability"
+description: "Named owners with named authority for every control in your AI governance programme."
+stage: 9
+subtitle: "Anonymous controls do not work. Names do."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-26"]
+    relevance: core
+    note: "Deployer obligations including assignment of human oversight."
+  - source: iso-iec-42001
+    articles: ["Clause-5.3"]
+    relevance: core
+prerequisites: [ai-policy, compliance]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+Every control in your <GlossaryTerm term="AI governance" /> programme needs a named human owner with stated authority. Vague ownership ("the data team") is functionally the same as no ownership.
+
+<MermaidJourney currentStage={9} />
+
+## The accountability matrix
+
+Maintain a per-system RACI that names:
+
+- **Owner** — the single named human accountable for the system end-to-end.
+- **Risk owner** — the named human who signs the risk-tier rationale.
+- **Data steward** — the named human accountable for the training-data integrity.
+- **Incident commander** — pre-assigned, on-call, with declared authority to pause the system.
+
+<PersonaSection persona="exec">
+The accountability map is the artefact your board will look at when an incident happens. Make sure the people listed actually know they are listed and have the authority you say they have.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+The risk owner needs to be senior enough to push back when product wants to ship a system that fails the risk check. Wire that authority into the merge-block path.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+EU AI Act Article 26 obligations for deployers include "natural persons to whom human oversight is assigned have the necessary competence, training and authority." The competence and authority parts get the most audit scrutiny.
+</PersonaSection>
+
+## Fictional company
+
+[Aurora Insurance London](/stories/aurora-insurance/) names their AI Compliance Lead as the risk owner and the on-call SRE rotation as the incident commander chain. The named pair appears on every conformity-assessment file and rotates only with formal handover documentation.
+
+<RegQuote source="eu-ai-act" article="Art-26" snapshot="2026-05-24" regulationName="EU AI Act">
+Deployers shall assign human oversight to natural persons who have the necessary competence, training and authority, as well as the necessary support.
+</RegQuote>
+
+**Why this matters:** when something fails at 3am, the question is "who has the authority to pause it?" If the answer is "we'll need to escalate to find out", the system is unsupervised.
+
+---
+
+Next: [Agentic AI Oversight](/stages/10-agentic-oversight/) — the special case of systems that act, not just predict.

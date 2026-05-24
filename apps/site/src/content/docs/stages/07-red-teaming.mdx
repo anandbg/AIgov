@@ -1,0 +1,66 @@
+---
+title: "7. Continuous Red-teaming"
+description: "The adversarial counterpart to compliance — proving the system fails the way you said it would."
+stage: 7
+subtitle: "Where you stop trusting the model card and start probing the model."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-15"]
+    relevance: core
+    note: "Accuracy, robustness and cybersecurity — the testing obligations for high-risk systems."
+  - source: nist-ai-rmf
+    articles: ["MEASURE-2", "MEASURE-3"]
+    relevance: core
+prerequisites: [risk-tiering, compliance]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+Red-teaming closes the loop between the controls you claim and the failures the system can actually produce. Continuous means it is not a one-off pre-launch exercise.
+
+<MermaidJourney currentStage={7} />
+
+## Adversarial-ML control catalogue
+
+This site cross-lists four open catalogues that should anchor your red-team programme:
+
+- **OWASP LLM Top 10** — application-level attack patterns
+- **MITRE ATLAS** — adversarial-ML tactics, techniques and case studies
+- **PyRIT** — Microsoft's red-team automation framework
+- **Garak** — LLM vulnerability scanner
+
+Match each entry to a regression test in your CI so a known attack pattern never silently resurfaces.
+
+<PersonaSection persona="exec">
+Budget for adversarial findings to require remediation work. A red-team that never finds anything is either not adversarial enough or the system has nothing to lose.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Wire OWASP LLM Top 10 entries into your test suite as named regression cases. Each new model version runs the suite before merge. Failures gate the merge.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+Article 15 obligations include accuracy, robustness, and cybersecurity — red-team findings + remediation are the evidence trail.
+</PersonaSection>
+
+## Fictional company
+
+[Sigma Health Berlin](/stories/sigma-health/) runs PyRIT against their clinical-summary model weekly. Findings flow into the same issue tracker as functional bugs, with severity labels that mirror their incident-response severity scheme (Stage 11).
+
+<RegQuote source="eu-ai-act" article="Art-15" snapshot="2026-05-24" regulationName="EU AI Act">
+High-risk AI systems shall be designed and developed in such a way that they achieve an appropriate level of accuracy, robustness, and cybersecurity, and perform consistently in those respects throughout their lifecycle.
+</RegQuote>
+
+**Why this matters:** the adversarial-ML field moves faster than regulation. A red-team programme is the only mechanism that detects new attack classes before they become incidents.
+
+---
+
+Next: [Documentation](/stages/08-documentation/) — the artefacts that survive personnel turnover.

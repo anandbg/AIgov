@@ -22,11 +22,10 @@ export default defineConfig({
         Head: './src/components/Head.astro',
         Footer: './src/components/SiteFooter.astro',
         Banner: './src/components/SustainabilityNotice.astro',
-        // NOTE: PersonaSwitch is NOT wired as Starlight's Header override here
-        // because overriding Header replaces the whole site nav (loses search +
-        // theme toggle). Phase 2 (CNT-02) will introduce a `<HeaderActions>` slot
-        // or render PersonaSwitch via a tiny Starlight `SiteTitle` companion.
-        // Phase 1 surfaces PersonaSwitch on the fixture page only.
+        // CNT-02: PersonaSwitch lives in Starlight's SocialIcons slot (top-right of
+        // nav, beside theme toggle + search) so it persists site-wide without
+        // overriding the whole Header.
+        SocialIcons: './src/components/HeaderActions.astro',
       },
       social: [],
       pagination: true,
@@ -40,18 +39,18 @@ export default defineConfig({
         {
           label: 'AI Governance Journey',
           items: [
-            { label: '1. AI Policy',              link: '/stages/ai-policy/',          badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '2. Risk Tiering',           link: '/stages/risk-tiering/',       badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '3. Risk Check',             link: '/stages/risk-check/',         badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '4. Compliance',             link: '/stages/compliance/',         badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '5. Third-party AI Risk',    link: '/stages/third-party-risk/',   badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '6. Data Controls',          link: '/stages/data-controls/',      badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '7. Continuous Red-teaming', link: '/stages/red-teaming/',        badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '8. Documentation',          link: '/stages/documentation/',      badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '9. Accountability',         link: '/stages/accountability/',     badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '10. Agentic AI Oversight',  link: '/stages/agentic-oversight/',  badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '11. Incident Response',     link: '/stages/incident-response/',  badge: { text: 'Phase 2', variant: 'note' } },
-            { label: '12. Monitoring',            link: '/stages/monitoring/',         badge: { text: 'Phase 2', variant: 'note' } },
+            { label: '1. AI Policy',              link: '/stages/01-ai-policy/',          },
+            { label: '2. Risk Tiering',           link: '/stages/02-risk-tiering/',       },
+            { label: '3. Risk Check',             link: '/stages/03-risk-check/',         },
+            { label: '4. Compliance',             link: '/stages/04-compliance/',         },
+            { label: '5. Third-party AI Risk',    link: '/stages/05-third-party-risk/',   },
+            { label: '6. Data Controls',          link: '/stages/06-data-controls/',      },
+            { label: '7. Continuous Red-teaming', link: '/stages/07-red-teaming/',        },
+            { label: '8. Documentation',          link: '/stages/08-documentation/',      },
+            { label: '9. Accountability',         link: '/stages/09-accountability/',     },
+            { label: '10. Agentic AI Oversight',  link: '/stages/10-agentic-oversight/',  },
+            { label: '11. Incident Response',     link: '/stages/11-incident-response/',  },
+            { label: '12. Monitoring',            link: '/stages/12-monitoring/',         },
           ],
         },
         { label: 'About',       link: '/about/' },

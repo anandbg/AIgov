@@ -1,0 +1,62 @@
+---
+title: "10. Agentic AI Oversight"
+description: "The additional controls required when an AI system takes actions in the world, not just predictions on a screen."
+stage: 10
+subtitle: "What changes when the model can pull triggers."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-14"]
+    relevance: core
+    note: "Human oversight is heavier when system can execute actions, not just produce outputs."
+  - source: nist-ai-rmf
+    articles: ["GOVERN-1", "MANAGE-4"]
+    relevance: supporting
+prerequisites: [accountability, red-teaming]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+An agentic AI system is one that takes actions in the world — sends emails, places orders, dispatches vehicles, modifies files. The governance burden steps up sharply at this boundary because the cost of a wrong action is no longer "the user reads bad text" but "money moved, hardware actuated, message sent."
+
+<MermaidJourney currentStage={10} />
+
+## Additional controls
+
+- **Action budget** — declared upper bound on resources the agent may consume per session and per day.
+- **Action allowlist** — explicit enumeration of permitted side-effects; anything else is refused at the tool layer.
+- **Reversibility tier** — every action labelled reversible / costly / irreversible; irreversible actions require explicit confirmation.
+- **Kill switch** — single-button mechanism to halt all agent sessions immediately.
+
+<PersonaSection persona="exec">
+Agentic systems can scale damage in ways predictive models cannot. The action budget and kill switch are the cheapest insurance policies you can buy.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+The action allowlist lives in the tool layer, not the prompt. Prompt-based constraints are advisory at best; the allowlist is the contract.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+Article 14 human-oversight obligations bite hardest here. The "stop button" mechanism in Art. 14(4)(e) is a literal requirement, not a metaphor.
+</PersonaSection>
+
+## Fictional company
+
+[Densha Logistics Tokyo](/stories/densha-logistics/) operates a dispatch agent that can place orders with vehicle partners. The action allowlist permits dispatch within declared geo-fences and budget limits; anything outside requires human confirmation. The kill switch flips both the agent and the upstream vehicle integrations.
+
+<RegQuote source="eu-ai-act" article="Art-14" snapshot="2026-05-24" regulationName="EU AI Act">
+Human oversight shall aim to prevent or minimise the risks to health, safety or fundamental rights that may emerge when a high-risk AI system is used in accordance with its intended purpose. The natural persons to whom human oversight is assigned shall be enabled, as appropriate and proportionate, to decide, in any particular situation, not to use the high-risk AI system or otherwise disregard, override or reverse the output of the high-risk AI system.
+</RegQuote>
+
+**Why this matters:** the prompt-engineering layer is not load-bearing for safety. The tool-layer allowlist is. Treat them with different rigour.
+
+---
+
+Next: [Incident Response](/stages/11-incident-response/) — what to do when one of these controls fails.

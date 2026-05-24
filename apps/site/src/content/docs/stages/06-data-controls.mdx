@@ -1,0 +1,63 @@
+---
+title: "6. Data Controls"
+description: "The data-governance layer that sits underneath every AI system — and decides whether you can defend it."
+stage: 6
+subtitle: "If the data lineage is missing, the model card is wallpaper."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-10"]
+    relevance: core
+    note: "Data and data governance — quality criteria for high-risk training/validation/testing datasets."
+  - source: uk-ico
+    articles: ["DPIA-AI"]
+    relevance: core
+    note: "DPIA + lawful-basis assessment for AI processing under UK GDPR."
+prerequisites: [ai-policy, compliance]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+Data controls are the substrate of AI governance. Without provable data lineage, bias evaluation, and lawful basis, every other downstream artefact is constructed on sand.
+
+<MermaidJourney currentStage={6} />
+
+## What good data control looks like
+
+- **Lineage**: every training dataset traceable to its source, including consent or licence basis.
+- **Bias evaluation**: documented baseline performance across protected attributes.
+- **Lawful basis**: under UK GDPR / EU GDPR, an explicit lawful basis recorded per data category.
+- **Retention**: timed deletion + suppression-list integration with model retraining.
+
+<PersonaSection persona="exec">
+Data controls are the most likely place for a regulator to look first. They are also the cheapest to fix early and the most expensive to retrofit. Treat lineage as a first-class engineering deliverable.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Lineage starts at the ingestion pipeline, not at the model trainer. Tag every dataset with source URI, fetch timestamp, licence string, and the consent transaction ID where applicable.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+UK GDPR's DPIA threshold is essentially always triggered for AI processing. The ICO's AI guidance suite walks through lawful-basis selection, accuracy testing, and ADM transparency in operational detail.
+</PersonaSection>
+
+## Fictional company
+
+[Aurora Insurance London](/stories/aurora-insurance/) operates a single Data Controls Register keyed by dataset name. The register links to lineage, DPIA, bias-evaluation report, and the consuming model cards. Removing or modifying a dataset triggers a downstream re-check across every model that consumes it.
+
+<RegQuote source="eu-ai-act" article="Art-10" snapshot="2026-05-24" regulationName="EU AI Act">
+High-risk AI systems which make use of techniques involving the training of models with data shall be developed on the basis of training, validation and testing data sets that meet the quality criteria referred to in paragraphs 2 to 5 whenever such data sets are used.
+</RegQuote>
+
+**Why this matters:** the data is the regulation's centre of gravity. If you cannot prove what data trained the model, you cannot defend the model's behaviour.
+
+---
+
+Next: [Continuous Red-teaming](/stages/07-red-teaming/) — adversarial probing of the system you just built.

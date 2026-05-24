@@ -1,0 +1,61 @@
+---
+title: "8. Documentation"
+description: "The artefacts that prove every other stage actually happened."
+stage: 8
+subtitle: "If it is not written down, it did not happen — for AI especially."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-11", "Annex-IV"]
+    relevance: core
+  - source: iso-iec-42001
+    articles: ["Clause-7.5"]
+    relevance: core
+prerequisites: [compliance]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+Documentation is the unglamorous spine of <GlossaryTerm term="AI governance" />. Every other stage produces evidence; this stage organises and maintains it so the next team finds it.
+
+<MermaidJourney currentStage={8} />
+
+## What you actually maintain
+
+- **Model cards** for every production model, kept in git next to the model artefact.
+- **Datasheets** for every training/validation/testing dataset.
+- **Conformity-assessment file** (EU AI Act Annex IV) per high-risk system.
+- **Change logs** — who changed what, when, why.
+
+<PersonaSection persona="exec">
+Documentation rot is the most expensive technical debt category in AI governance because regulators read it backwards from incidents. Budget continuous maintenance, not point-in-time updates.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Generate documentation from build artefacts where possible. Model cards keyed off pipeline metadata stay accurate; hand-written model cards lie within a release cycle.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+Annex IV of the EU AI Act is the canonical structure for high-risk documentation. Adopt the section headings even for non-high-risk systems — auditors recognise the shape.
+</PersonaSection>
+
+## Fictional company
+
+[Acme Robotics US](/stories/acme-robotics/) auto-generates model cards via a CI job that runs on every successful training pipeline. The job pulls metadata from the training run plus a hand-curated "limitations and intended use" block reviewed by their AI ethics lead.
+
+<RegQuote source="eu-ai-act" article="Art-11" snapshot="2026-05-24" regulationName="EU AI Act">
+The technical documentation of a high-risk AI system shall be drawn up before that system is placed on the market or put into service and shall be kept up-to-date. The technical documentation shall be drawn up in such a way as to demonstrate that the high-risk AI system complies with the requirements set out in this Section.
+</RegQuote>
+
+**Why this matters:** documentation is the regulator's primary investigative surface. Make it generated, make it dated, make it diff-able.
+
+---
+
+Next: [Accountability](/stages/09-accountability/) — the named owners of every control.

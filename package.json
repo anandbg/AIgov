@@ -17,7 +17,9 @@
     "clean": "pnpm -r exec rm -rf node_modules dist .astro .turbo",
     "lighthouse": "lhci autorun",
     "axe": "node ./scripts/run-axe.mjs",
-    "weight-budget": "node ./scripts/check-weight-budget.mjs apps/site/dist"
+    "weight-budget": "node ./scripts/check-weight-budget.mjs apps/site/dist",
+    "voice-check": "node ./scripts/check-content-voice.mjs",
+    "persona-lens-check": "node ./scripts/check-persona-lens.mjs"
   },
   "devDependencies": {
     "@types/node": "22.10.1",

@@ -1,0 +1,63 @@
+---
+title: "11. Incident Response"
+description: "The runbook that turns a 3am pager into a documented, regulator-ready response."
+stage: 11
+subtitle: "Where the governance programme proves its actual value."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-73"]
+    relevance: core
+    note: "Serious-incident reporting obligation — 15 days for most, 2 days for widespread infringement."
+  - source: uk-ico
+    articles: ["Breach-Reporting"]
+    relevance: core
+prerequisites: [accountability, agentic-oversight]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+Incident response is the operational moment your governance programme stops being a planning exercise and becomes a runbook. Time-to-detect, time-to-pause, time-to-notify all carry regulatory weight.
+
+<MermaidJourney currentStage={11} />
+
+## The shape of a usable runbook
+
+- **Detection** — what signal counts as an incident; who triages it.
+- **Severity** — a small taxonomy (typically S0–S3) mapping to response time and escalation.
+- **Containment** — first action; usually pause or rollback.
+- **Notification** — internal escalation matrix + external regulator timelines.
+- **Post-mortem** — blameless, written, linked from the model card.
+
+<PersonaSection persona="exec">
+The notification window — 15 days under EU AI Act Article 73, sometimes 2 days for widespread infringement — is the externally-imposed clock that decides whether response time is "professional" or "actionable findings".
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Wire the pause action into the same place the kill switch lives (Stage 10). Practise it. Quarterly tabletop exercises catch the broken runbook before the real incident does.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+Article 73 incident-reporting obligations apply to providers of high-risk systems and to GPAI providers. Map your serious-incident definition to the article text — vague internal definitions translate poorly to the regulator's form.
+</PersonaSection>
+
+## Fictional company
+
+[Sigma Health Berlin](/stories/sigma-health/) maintains a one-page incident runbook per high-risk system. The runbook lives next to the model card; the on-call rotation reads it during onboarding and at quarterly drills.
+
+<RegQuote source="eu-ai-act" article="Art-73" snapshot="2026-05-24" regulationName="EU AI Act">
+Providers of high-risk AI systems placed on the Union market shall report any serious incident to the market surveillance authorities of the Member States where that incident occurred. That reporting shall be made immediately after the provider has established a causal link between the AI system and the serious incident or the reasonable likelihood of such a link, and, in any event, not later than 15 days after the providers or, where applicable, the deployers, becomes aware of the serious incident.
+</RegQuote>
+
+**Why this matters:** the regulator measures incident response on calendar time. The clock starts the moment a person at your organisation knows.
+
+---
+
+Next: [Monitoring](/stages/12-monitoring/) — the always-on counterpart to incident response.

@@ -1,0 +1,59 @@
+---
+title: "2. Risk Tiering"
+description: "Classify each AI system into a tier that determines which controls apply — before code lands."
+stage: 2
+subtitle: "The classification step that decides how heavy the downstream paperwork gets."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-6", "Annex-III"]
+    relevance: core
+    note: "The EU AI Act defines four tiers with cascading obligations; Article 6 + Annex III enumerate high-risk."
+  - source: nist-ai-rmf
+    articles: ["MAP-1"]
+    relevance: supporting
+prerequisites: [ai-policy]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+<GlossaryTerm term="Risk tier" /> classification is the gate that decides whether your AI system needs three pages of documentation or three hundred. Misclassify early and the rework cost compounds across every downstream stage.
+
+<MermaidJourney currentStage={2} />
+
+## The four tiers
+
+The EU AI Act uses four tiers (unacceptable, high-risk, limited-risk, minimal-risk). Other frameworks differ — NIST AI RMF talks about "context" rather than discrete tiers; ISO/IEC 42001 leaves the tiering taxonomy to your AIMS. The discipline is the same: classify once, write down the reasoning, revisit when context changes.
+
+<PersonaSection persona="exec">
+The tier determines whether a system can ship in days or months. Push for clarity on this decision early — every week the classification stays ambiguous costs engineering velocity and counsel time.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Tiering is not based on model size or training-data volume. It is based on use-context: who the system affects, what decisions it influences, what the downside of error looks like. A 1B-parameter model deciding loan eligibility is high-risk; a 70B-parameter model summarising internal meeting notes is not.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+EU AI Act Article 6 plus Annex III are the operative texts. Annex III lists eight high-risk use-case categories. Crucially, Article 6(3) lets you derogate from high-risk classification with a written and registered justification — that's a paper exercise you cannot afford to skip when you believe it applies.
+</PersonaSection>
+
+## Fictional company
+
+[Aurora Insurance London](/stories/aurora-insurance/) tiers their claim-fraud detection model as high-risk under Annex III §5(b). Their LLM-based customer-service summariser is limited-risk (transparency obligations only). Both decisions are documented in a one-page tier rationale stored next to the model card.
+
+<RegQuote source="eu-ai-act" article="Art-6" snapshot="2026-05-24" regulationName="EU AI Act">
+An AI system shall be considered to be high-risk where both of the following conditions are fulfilled: (a) the AI system is intended to be used as a safety component of a product, or is itself a product, covered by the Union harmonisation legislation listed in Annex I; (b) the product whose safety component is the AI system, or the AI system itself as a product, is required to undergo a third-party conformity assessment.
+</RegQuote>
+
+**Why this matters:** misclassification is the single most expensive mistake in this entire journey — every downstream control depends on the tier. Get a second pair of eyes on Annex III mapping before you commit.
+
+---
+
+Next: [Risk Check](/stages/03-risk-check/) — the periodic re-evaluation of the tier you just assigned.

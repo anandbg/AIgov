@@ -1,0 +1,36 @@
+name: CI — content voice + persona lens
+
+on:
+  pull_request:
+    paths:
+      - 'apps/site/src/content/**'
+      - 'scripts/check-content-voice.mjs'
+      - 'scripts/check-persona-lens.mjs'
+      - 'docs/STYLE.md'
+      - '.github/workflows/ci-content-gates.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-content-gates-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  content-gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Voice check (CNT-10)
+        run: pnpm voice-check
+      - name: Persona-lens completeness (CNT-11)
+        run: pnpm persona-lens-check

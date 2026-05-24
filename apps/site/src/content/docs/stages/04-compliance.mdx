@@ -1,0 +1,66 @@
+---
+title: "4. Compliance"
+description: "Concrete controls that satisfy the obligations triggered by your risk tier."
+stage: 4
+subtitle: "Where written policy becomes evidence."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-10", "Art-11", "Art-13", "Art-14"]
+    relevance: core
+    note: "Data governance, technical documentation, transparency, human oversight — the conformity-assessment hard requirements."
+  - source: iso-iec-42001
+    articles: ["Annex-A"]
+    relevance: core
+prerequisites: [ai-policy, risk-tiering, risk-check]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+Compliance is the stage where the AI policy and the assigned risk tier translate into concrete artefacts an auditor can examine: data-governance records, technical documentation, transparency notices, human-oversight procedures.
+
+<MermaidJourney currentStage={4} />
+
+## What compliance ships
+
+For high-risk EU AI Act systems, the conformity-assessment file is the deliverable. It contains:
+
+- A data-governance record (Art. 10) — lineage, bias evaluation, quality criteria
+- Technical documentation (Art. 11 + Annex IV) — design, architecture, validation results
+- Transparency information for deployers (Art. 13)
+- Human-oversight procedures (Art. 14)
+
+For voluntary frameworks like NIST AI RMF, the equivalent artefact is the AI risk profile organised across Govern / Map / Measure / Manage.
+
+<PersonaSection persona="exec">
+Compliance is the line item that scales linearly with the number of high-risk systems you operate. Budget per-system, not per-organisation.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Treat the technical documentation as a living artefact, generated where possible from model cards and pipeline metadata. Hand-written documentation rots within one release cycle.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+Article 11 + Annex IV is the canonical structure for high-risk technical documentation. Map your existing model-card schema to its sections before authoring fresh prose.
+</PersonaSection>
+
+## Fictional company
+
+[Sigma Health Berlin](/stories/sigma-health/) maintains their conformity assessment as a git-tracked Markdown bundle. Each release tag produces a frozen PDF; the canonical source is reviewed monthly by their notified body.
+
+<RegQuote source="eu-ai-act" article="Art-11" snapshot="2026-05-24" regulationName="EU AI Act">
+The technical documentation of a high-risk AI system shall be drawn up before that system is placed on the market or put into service and shall be kept up-to-date.
+</RegQuote>
+
+**Why this matters:** drafting compliance evidence after a regulator asks for it is an order of magnitude more expensive than maintaining it as a build artefact.
+
+---
+
+Next: [Third-party AI Risk](/stages/05-third-party-risk/) — applying the same lens to vendors.

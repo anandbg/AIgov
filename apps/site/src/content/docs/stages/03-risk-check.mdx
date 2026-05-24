@@ -1,0 +1,61 @@
+---
+title: "3. Risk Check"
+description: "The recurring sanity check that catches drift between the system you classified and the system you're now running."
+stage: 3
+subtitle: "Periodic re-assessment that catches scope creep and model behaviour drift."
+personas:
+  exec: true
+  engineer: true
+  compliance: true
+regulations:
+  - source: eu-ai-act
+    articles: ["Art-9", "Art-72"]
+    relevance: core
+    note: "Risk-management-system + post-market monitoring obligations both require periodic risk re-assessment."
+  - source: nist-ai-rmf
+    articles: ["MEASURE-2", "MANAGE-1"]
+    relevance: core
+prerequisites: [ai-policy, risk-tiering]
+draft: false
+---
+
+import PersonaSection from '~/components/PersonaSection.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+
+A <GlossaryTerm term="Risk tier" /> assigned at launch is a snapshot, not a guarantee. Risk Check is the recurring discipline that catches the system drifting outside its assigned tier — usually because a feature shipped, the dataset shifted, or someone enabled a new downstream consumer.
+
+<MermaidJourney currentStage={3} />
+
+## When risk check fires
+
+- After any change to model, training data, or system prompt that exceeds your declared change-control threshold.
+- On a calendar cadence aligned with the tier — typically quarterly for high-risk, annually for limited-risk.
+- When a downstream incident report (Stage 11) finds the tier was wrong.
+
+<PersonaSection persona="exec">
+Risk check is the cheapest moment in the lifecycle to catch a tier mistake. Once a misclassified system is in production, the legal and operational cost of re-tiering compounds. Budget the recurring time.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Tie the risk check to your release pipeline. A model retrain that crosses your declared drift threshold is the most common trigger. Wire a flag into your training infra that pings the risk owner when drift exceeds the threshold.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+EU AI Act Article 9(2) requires the risk-management system to be a continuous iterative process throughout the life cycle. That language reads as "annual" but bites as "any material change" — your auditor will look at the change log first.
+</PersonaSection>
+
+## Fictional company
+
+[Acme Robotics US](/stories/acme-robotics/) ran their first quarterly risk check on the warehouse-navigation model six months after launch. The check caught that the model had been silently retrained on data from a new facility that included near-miss-with-human events. The tier shifted from limited to high-risk; the conformity assessment took six weeks; deployment paused in the meantime.
+
+<RegQuote source="eu-ai-act" article="Art-9" snapshot="2026-05-24" regulationName="EU AI Act">
+A risk management system shall be established, implemented, documented and maintained in relation to high-risk AI systems. The risk management system shall be understood as a continuous iterative process planned and run throughout the entire lifecycle of a high-risk AI system, requiring regular systematic review and updating.
+</RegQuote>
+
+**Why this matters:** every misclassified system you discover after launch costs more to fix than every classification you got right. Make the recurring check non-negotiable.
+
+---
+
+Next: [Compliance](/stages/04-compliance/) — building the controls that the tier just demanded.
