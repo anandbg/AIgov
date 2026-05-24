@@ -1,0 +1,168 @@
+@import "tailwindcss";
+@import "@astrojs/starlight-tailwind";
+
+@theme {
+  /* === Color: accent (slate-indigo) === */
+  --color-accent-50:  #eef2ff;
+  --color-accent-100: #e0e7ff;
+  --color-accent-200: #c7d2fe;
+  --color-accent-300: #a5b4fc;
+  --color-accent-400: #818cf8;
+  --color-accent-500: #6366f1;
+  --color-accent-600: #4f46e5;  /* primary accent (light theme) */
+  --color-accent-700: #4338ca;
+  --color-accent-800: #3730a3;
+  --color-accent-900: #312e81;
+  --color-accent-950: #1e1b4b;
+
+  /* === Color: gray (cool neutral, matches Starlight base) === */
+  --color-gray-50:  #f6f7f9;
+  --color-gray-100: #eceef2;
+  --color-gray-200: #d5d9e0;
+  --color-gray-300: #adb4be;
+  --color-gray-400: #7f8794;
+  --color-gray-500: #5b6270;
+  --color-gray-600: #444a55;
+  --color-gray-700: #353a44;
+  --color-gray-800: #232730;
+  --color-gray-900: #161a22;
+  --color-gray-950: #0f1419;
+
+  /* === Font stacks (no web fonts — system stack only) === */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", system-ui, "Liberation Sans", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* === Motion === */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --motion-easing: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Starlight variable bridging (light theme defaults; dark inherits via Starlight) */
+:root {
+  --sl-color-accent-low:  var(--color-accent-50);
+  --sl-color-accent:      var(--color-accent-600);
+  --sl-color-accent-high: var(--color-accent-800);
+}
+
+:root[data-theme="dark"] {
+  --sl-color-accent-low:  var(--color-accent-950);
+  --sl-color-accent:      var(--color-accent-400);
+  --sl-color-accent-high: var(--color-accent-200);
+}
+
+/* Reduced-motion default */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* PersonaSection visibility — driven by data-persona on <html>. Default = all visible. */
+html[data-persona]:not([data-persona="all"]) section[data-for-persona]:not([data-for-persona="all"]) {
+  display: none;
+}
+html[data-persona="exec"] section[data-for-persona="exec"],
+html[data-persona="engineer"] section[data-for-persona="engineer"],
+html[data-persona="compliance"] section[data-for-persona="compliance"],
+html:not([data-persona]) section[data-for-persona],
+html[data-persona="all"] section[data-for-persona] {
+  display: block;
+}
+
+/* JurisdictionLens visibility — parallel structure for data-jurisdiction */
+html[data-jurisdiction]:not([data-jurisdiction="all"]) aside[data-for-jurisdiction]:not([data-for-jurisdiction="all"]) {
+  display: none;
+}
+
+/* Focus ring (WCAG 2.4.7) */
+*:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Skip-to-content link */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+}
+.skip-link:focus-visible {
+  left: 1rem;
+  top: 1rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text);
+  border: 2px solid var(--sl-color-accent);
+  border-radius: 4px;
+}
+
+/* Touch-target minimum (WCAG 2.5.8 — 44px) */
+.touch-target,
+button[aria-label]:not(.no-min):not(:has(span)),
+[role="button"][aria-label]:not(.no-min) {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+}
+
+/* Print stylesheet (FND-11) */
+@media print {
+  /* Hide chrome that isn't readable on paper */
+  header, nav, aside.sidebar, .persona-switch, .theme-toggle,
+  .search-trigger, .chat-widget, .skip-link { display: none !important; }
+
+  /* Show all persona sections (print = no JS choice) */
+  [data-for-persona] {
+    display: block !important;
+    border-left: 2px solid #000;
+    padding-left: 12px;
+  }
+  [data-for-persona]::before {
+    content: "[" attr(data-for-persona) "] ";
+    font-weight: 600;
+    font-size: 11pt;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  /* Footer disclaimer prints */
+  footer.site-footer {
+    display: block;
+    border-top: 1px solid #000;
+    padding-top: 12pt;
+    margin-top: 24pt;
+  }
+
+  /* Inline links show URL */
+  a[href]:not([href^="#"])::after {
+    content: " (" attr(href) ")";
+    font-size: 10pt;
+    color: #555;
+  }
+
+  /* Body text: 11pt serif fallback for readability */
+  body {
+    font-family: Georgia, "Liberation Serif", serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #000;
+    background: #fff;
+  }
+
+  /* Heading scale */
+  h1 { font-size: 20pt; }
+  h2 { font-size: 16pt; }
+  h3 { font-size: 13pt; }
+
+  /* Avoid orphan headings */
+  h1, h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+}
