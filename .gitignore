@@ -18,3 +18,7 @@ coverage/
 pnpm-debug.log*
 dist-ssr/
 .lighthouseci/
+
+# Internal AI-assistant + GSD-workflow artifacts — kept locally, not in public repo
+.planning/
+CLAUDE.md
