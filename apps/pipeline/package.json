@@ -3,8 +3,22 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "bin": {
+    "aigov-pipeline": "./src/cli/index.ts"
+  },
   "scripts": {
-    "build": "echo 'pipeline scaffolds in Phase 3'",
-    "typecheck": "echo 'pending Phase 3'"
+    "build": "echo 'pipeline runs via tsx — no build step'",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "run-source": "tsx src/cli/index.ts run"
+  },
+  "dependencies": {
+    "@aigov/shared": "workspace:*",
+    "cheerio": "1.0.0",
+    "zod": "3.23.8",
+    "yaml": "2.9.0"
+  },
+  "devDependencies": {
+    "tsx": "4.22.3",
+    "typescript": "5.6.3"
   }
 }

@@ -28,16 +28,25 @@ Red-teaming closes the loop between the controls you claim and the failures the 
 
 <MermaidJourney currentStage={7} />
 
-## Adversarial-ML control catalogue
+## Adversarial-ML control catalogue (TRK-17)
 
-This site cross-lists four open catalogues that should anchor your red-team programme:
+This site cross-lists four open catalogues. Each row maps a category of failure to representative entries across all four — pick one as the canonical source-of-truth for your programme; the others are sanity references.
+
+| Failure category | OWASP LLM Top 10 | MITRE ATLAS | PyRIT (test) | Garak (probe) |
+|---|---|---|---|---|
+| Prompt injection | LLM01 | AML.T0051 | `prompt_injection` orchestrator | `promptinject.HijackEnvelope` |
+| Sensitive-info disclosure | LLM06 | AML.T0024 | `data_exfiltration` orchestrator | `leakreplay` |
+| Insecure output handling | LLM05 | AML.T0050 | (composer rule) | `xss.ColdReboot` |
+| Training-data poisoning | LLM03 | AML.T0020 | n/a (offline scope) | n/a |
+| Model DoS | LLM04 | AML.T0022 | `resource_exhaustion` orchestrator | n/a |
+| Supply-chain (model & tool) | LLM07 / LLM10 | AML.T0010 | n/a | n/a |
+
+Match each row to a named regression test in your CI so a known attack pattern never silently resurfaces. The four catalogues:
 
 - **OWASP LLM Top 10** — application-level attack patterns
-- **MITRE ATLAS** — adversarial-ML tactics, techniques and case studies
+- **MITRE ATLAS** — adversarial-ML tactics, techniques, and real-world case studies
 - **PyRIT** — Microsoft's red-team automation framework
-- **Garak** — LLM vulnerability scanner
-
-Match each entry to a regression test in your CI so a known attack pattern never silently resurfaces.
+- **Garak** — LLM vulnerability scanner with a large probe library
 
 <PersonaSection persona="exec">
 Budget for adversarial findings to require remediation work. A red-team that never finds anything is either not adversarial enough or the system has nothing to lose.

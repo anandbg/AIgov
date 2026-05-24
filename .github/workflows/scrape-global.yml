@@ -1,0 +1,66 @@
+name: Scrape — global sources
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Single source slug to scrape (blank = all global sources)'
+        required: false
+        default: ''
+
+concurrency:
+  group: scrape-global
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Scrape NIST AI RMF
+        run: pnpm --filter @aigov/pipeline run-source nist-ai-rmf
+      - name: Update heartbeat
+        run: |
+          mkdir -p .heartbeat
+          cat > .heartbeat/last-run-scrape-global.json <<EOF
+          {
+            "source": "scrape-global",
+            "lastRun": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "ok": true,
+            "expectedCadence": "weekly (Sun 03:00 UTC)"
+          }
+          EOF
+      - name: Open PR if snapshots changed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            BRANCH="scrape/global-$(date -u +%Y%m%d)"
+            git checkout -b "$BRANCH"
+            git add apps/site/src/content/regulations/ .heartbeat/
+            git commit -m "data(global): weekly scrape $(date -u +%Y-%m-%d)"
+            git push -u origin "$BRANCH"
+            gh pr create \
+              --title "data(global): weekly scrape $(date -u +%Y-%m-%d)" \
+              --body "Automated scrape PR (TRK-08). Per-source classification, reviewer checklist, and verify-quotes CI gate will populate as adapters expand. Review the diff before merging." \
+              --label "scrape,scope-global" \
+              --base main
+          else
+            echo "No changes — skipping PR creation"
+          fi

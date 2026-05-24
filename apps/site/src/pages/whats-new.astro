@@ -1,0 +1,24 @@
+---
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import ChangeLog from '~/components/ChangeLog.astro';
+import { getCollection } from 'astro:content';
+
+// Phase 3 entry point — eventually reads .planning/data/changes.json (TRK-11).
+// For Phase 3.0 we synthesize a single-page change log from snapshot frontmatter.
+
+const snapshots = (await getCollection('snapshots')).filter((s) => !s.id.includes('_'));
+
+type Entry = { date: string; summary: string; href?: string };
+const entries: Entry[] = snapshots
+  .map((s) => ({
+    date: s.data.snapshotDate,
+    // `source` in the snapshot schema is a Reference; `id` is the collection slug.
+    summary: `${typeof s.data.source === 'string' ? s.data.source : (s.data.source as { id?: string }).id ?? ''} — ${s.data.changeSummary}`,
+    href: `/regulations/${typeof s.data.source === 'string' ? s.data.source : (s.data.source as { id?: string }).id ?? ''}/${s.data.snapshotDate}/`,
+  }))
+  .sort((a, b) => (a.date < b.date ? 1 : -1));
+---
+<StarlightPage frontmatter={{ title: "What's new", description: "Recent changes across every tracked regulation and vendor policy.", tableOfContents: false }}>
+  <p>This page lists changes detected by the AI Governance tracking pipeline, newest first. Subscribe via <a href="/feed.xml">RSS</a> for updates.</p>
+  <ChangeLog entries={entries} />
+</StarlightPage>
