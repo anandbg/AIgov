@@ -1,0 +1,78 @@
+---
+import { getEntry } from 'astro:content';
+import { glossaryUrl } from '@aigov/shared';
+
+interface Props {
+  term: string;
+  slug?: string;
+}
+const { term, slug } = Astro.props as Props;
+const resolvedSlug = slug ?? term.toLowerCase().replace(/\s+/g, '-');
+const entry = await getEntry('glossary', resolvedSlug);
+const definition = entry?.data?.definition;
+const id = `tooltip-${resolvedSlug}`;
+---
+{definition ? (
+  <span class="glossary-host">
+    <dfn
+      data-term={resolvedSlug}
+      tabindex="0"
+      aria-describedby={id}
+      class="glossary-dfn"
+    >{term}</dfn>
+    <span role="tooltip" id={id} class="glossary-tooltip">
+      <span class="glossary-definition">{definition}</span>
+      <a class="glossary-open" href={glossaryUrl(resolvedSlug)}>Open glossary →</a>
+    </span>
+  </span>
+) : (
+  <span>{term}{/* WARNING: no glossary entry for slug "${resolvedSlug}" */}</span>
+)}
+
+<style>
+  .glossary-host {
+    position: relative;
+    display: inline-block;
+  }
+  .glossary-dfn {
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    cursor: help;
+    font-style: normal;
+  }
+  .glossary-tooltip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    z-index: 50;
+    width: max-content;
+    max-width: 320px;
+    background: var(--sl-color-bg-sidebar);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 8px;
+    padding: 10px 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    font-size: 14px;
+    color: var(--sl-color-text);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--motion-base) var(--motion-easing);
+  }
+  .glossary-host:hover .glossary-tooltip,
+  .glossary-dfn:focus-visible + .glossary-tooltip,
+  .glossary-tooltip:hover,
+  .glossary-tooltip:focus-within {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .glossary-definition {
+    display: block;
+    margin-bottom: 6px;
+  }
+  .glossary-open {
+    font-size: 13px;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+  .glossary-open:hover { text-decoration: underline; }
+</style>

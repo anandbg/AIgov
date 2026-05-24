@@ -1,0 +1,68 @@
+---
+interface Entry {
+  date: string;
+  summary: string;
+  href?: string;
+}
+interface Props {
+  entries?: Entry[];
+}
+const { entries = [] } = Astro.props as Props;
+---
+{entries.length === 0 ? (
+  <div class="changelog-empty">
+    <strong>No changes tracked yet.</strong>
+    <p>Change tracking ships in Phase 3 (Tracking Pipeline). Once active, this page will show what changed across every tracked source, week by week.</p>
+  </div>
+) : (
+  <ol class="changelog">
+    {entries.map((e) => (
+      <li class="changelog-entry">
+        <time class="changelog-date" datetime={e.date}>{e.date}</time>
+        <span class="changelog-summary">{e.summary}</span>
+        {e.href && <a class="changelog-link" href={e.href}>view diff →</a>}
+      </li>
+    ))}
+  </ol>
+)}
+
+<style>
+  .changelog-empty {
+    border: 1px dashed var(--sl-color-gray-5);
+    border-radius: 8px;
+    padding: 16px;
+    background: var(--sl-color-bg-sidebar);
+    color: var(--sl-color-text-muted);
+  }
+  .changelog-empty strong {
+    color: var(--sl-color-text);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .changelog {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .changelog-entry {
+    display: grid;
+    grid-template-columns: 110px 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+  }
+  .changelog-entry:last-child { border-bottom: none; }
+  .changelog-date {
+    font-family: var(--font-mono, ui-monospace);
+    font-size: 14px;
+    color: var(--sl-color-text-muted);
+  }
+  .changelog-summary { font-size: 15px; }
+  .changelog-link {
+    font-size: 14px;
+    color: var(--sl-color-accent);
+    text-decoration: none;
+  }
+  .changelog-link:hover { text-decoration: underline; }
+</style>

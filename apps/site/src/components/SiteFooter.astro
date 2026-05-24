@@ -1,0 +1,36 @@
+---
+import { Icon } from 'astro-icon/components';
+import DisclaimerBanner from './DisclaimerBanner.astro';
+---
+<footer class="site-footer">
+  <nav class="site-footer-nav" aria-label="Site footer">
+    <a class="site-footer-link" href="https://github.com/PLACEHOLDER_ORG/AIgov" rel="noopener">
+      <Icon name="lucide:github" /> View source
+    </a>
+    <a class="site-footer-link" href="/feed.xml">
+      <Icon name="lucide:rss" /> Subscribe via RSS
+    </a>
+  </nav>
+  <DisclaimerBanner variant="footer" />
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+  .site-footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  .site-footer-link {
+    color: var(--sl-color-text-muted);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .site-footer-link:hover { color: var(--sl-color-text); }
+</style>

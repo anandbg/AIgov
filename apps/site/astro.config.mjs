@@ -19,8 +19,14 @@ export default defineConfig({
       description: 'Plain-language AI governance, current to this week.',
       customCss: ['./src/styles/global.css'],
       components: {
-        // Component overrides land in plan 01-05
-        // (PersonaSwitch, DisclaimerBanner, SustainabilityNotice)
+        Head: './src/components/Head.astro',
+        Footer: './src/components/SiteFooter.astro',
+        Banner: './src/components/SustainabilityNotice.astro',
+        // NOTE: PersonaSwitch is NOT wired as Starlight's Header override here
+        // because overriding Header replaces the whole site nav (loses search +
+        // theme toggle). Phase 2 (CNT-02) will introduce a `<HeaderActions>` slot
+        // or render PersonaSwitch via a tiny Starlight `SiteTitle` companion.
+        // Phase 1 surfaces PersonaSwitch on the fixture page only.
       },
       social: [],
       pagination: true,

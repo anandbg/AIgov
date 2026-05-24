@@ -1,0 +1,42 @@
+---
+/* Phase 1 ships shell + CSS tokens + no-JS fallback only.
+   Real diffs (lazy-loaded diff2html via client:visible) land in Phase 3 (TRK-14). */
+interface Props {
+  diffSrc?: string;
+}
+const { diffSrc } = Astro.props as Props;
+---
+<details class="diff-viewer">
+  <summary>View diff</summary>
+  <div class="diff-viewer-body" data-diff-src={diffSrc}>
+    <pre class="diff-fallback">No diff to display yet — the pipeline ships in Phase 3.</pre>
+  </div>
+</details>
+
+<style>
+  .diff-viewer {
+    --diff-red: #f8d7da;
+    --diff-green: #d4edda;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    background: var(--sl-color-bg);
+  }
+  :root[data-theme="dark"] .diff-viewer {
+    --diff-red: #4a1f24;
+    --diff-green: #1f3a26;
+  }
+  .diff-viewer > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--sl-color-accent);
+  }
+  .diff-fallback {
+    font-family: var(--font-mono, ui-monospace);
+    font-size: 13px;
+    color: var(--sl-color-text-muted);
+    margin: 12px 0 0;
+    white-space: pre-wrap;
+  }
+</style>

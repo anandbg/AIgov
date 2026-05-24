@@ -1,0 +1,39 @@
+---
+interface Props {
+  persona: 'exec' | 'engineer' | 'compliance';
+}
+const { persona } = Astro.props as Props;
+---
+<section data-for-persona={persona} class={`persona-section persona-${persona}`}>
+  <div class="persona-label">{persona.toUpperCase()}</div>
+  <div class="persona-body"><slot /></div>
+</section>
+
+<style>
+  .persona-section {
+    border-left-width: 3px;
+    border-left-style: solid;
+    padding: 8px 0 8px 16px;
+    margin: 16px 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 16px;
+    align-items: start;
+  }
+  .persona-exec       { border-left-color: hsl(243, 60%, 60%); }
+  .persona-engineer   { border-left-color: var(--sl-color-gray-3); }
+  .persona-compliance { border-left-color: var(--sl-color-info, #0369a1); }
+
+  .persona-label {
+    grid-column: 2;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-text-muted);
+    text-transform: uppercase;
+  }
+  .persona-body {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+</style>

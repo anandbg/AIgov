@@ -1,6 +1,6 @@
 ---
 title: "Phase 1 Fixture — Shell Components Demo"
-description: "A non-public fixture page that exercises every shell component for FND-05 verification."
+description: "Renders every shell component for FND-05 verification."
 stage: 0
 slug: phase1-fixture
 personas:
@@ -8,12 +8,62 @@ personas:
   engineer: true
   compliance: true
 regulations: []
-prerequisites: []
 draft: true
 ---
 
-# Phase 1 fixture page
+import PersonaSection from '~/components/PersonaSection.astro';
+import PersonaSwitch from '~/components/PersonaSwitch.astro';
+import RegQuote from '~/components/RegQuote.astro';
+import JurisdictionLens from '~/components/JurisdictionLens.astro';
+import DiffViewer from '~/components/DiffViewer.astro';
+import ChangeLog from '~/components/ChangeLog.astro';
+import GlossaryTerm from '~/components/GlossaryTerm.astro';
+import MermaidJourney from '~/components/MermaidJourney.astro';
+import DisclaimerBanner from '~/components/DisclaimerBanner.astro';
 
-This page is excluded from the published site (leading underscore in filename). It exists to render every shell component during Phase 1 verification so plan 01-05's components have a host page.
+# Phase 1 fixture — shell component demo
 
-Plan 01-05 fills this page with `<PersonaSection>`, `<RegQuote>`, `<JurisdictionLens>`, `<DiffViewer>`, `<ChangeLog>`, `<GlossaryTerm>`, `<MermaidJourney>`, `<DisclaimerBanner>`, and `<SustainabilityNotice>` references.
+Every component below is built by plan 01-05 and rendered here so FND-05 verifies end-to-end.
+
+## Persona switch (chrome)
+
+<PersonaSwitch />
+
+## Journey
+
+<MermaidJourney currentStage={0} />
+
+## Per-regulation banner
+
+<DisclaimerBanner variant="banner" regulationName="Phase 1 Fixture Regulation" lastScraped="2026-05-24" />
+
+## Persona sections
+
+<PersonaSection persona="exec">
+Executives need to understand budget and exposure — see <GlossaryTerm term="AI governance" /> for the umbrella term.
+</PersonaSection>
+
+<PersonaSection persona="engineer">
+Engineers need to know which tier a system falls into — see <GlossaryTerm term="Risk tier" />.
+</PersonaSection>
+
+<PersonaSection persona="compliance">
+Compliance teams need authoritative citations — see the example below.
+</PersonaSection>
+
+## Citation primitive
+
+<RegQuote source="_phase1-fixture" article="Art-1" snapshot="2026-05-24" regulationName="Phase 1 Fixture Regulation">
+Fixture quoted text. Replaced by real regulation prose in Phase 2.
+</RegQuote>
+
+## Jurisdiction lens
+
+<JurisdictionLens jurisdiction="eu">
+EU-specific commentary lives here when jurisdiction-tagged.
+</JurisdictionLens>
+
+## Diff and changelog (empty state)
+
+<DiffViewer />
+<ChangeLog />

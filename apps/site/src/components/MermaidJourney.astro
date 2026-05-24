@@ -1,0 +1,50 @@
+---
+interface Props {
+  currentStage?: number;
+}
+const { currentStage } = Astro.props as Props;
+const wrapperClass = ['mermaid-journey', currentStage ? `current-S${currentStage}` : ''].filter(Boolean).join(' ');
+const stages = [
+  '1. AI Policy',
+  '2. Risk Tiering',
+  '3. Risk Check',
+  '4. Compliance',
+  '5. Third-party AI Risk',
+  '6. Data Controls',
+  '7. Continuous Red-teaming',
+  '8. Documentation',
+  '9. Accountability',
+  '10. Agentic AI Oversight',
+  '11. Incident Response',
+  '12. Monitoring',
+];
+---
+<div class={wrapperClass}>
+
+```mermaid
+flowchart LR
+  S1[1. AI Policy] --> S2[2. Risk Tiering] --> S3[3. Risk Check] --> S4[4. Compliance]
+  S4 --> S5[5. Third-party AI Risk] --> S6[6. Data Controls] --> S7[7. Continuous Red-teaming]
+  S7 --> S8[8. Documentation] --> S9[9. Accountability] --> S10[10. Agentic AI Oversight]
+  S10 --> S11[11. Incident Response] --> S12[12. Monitoring]
+```
+
+  <details class="mermaid-fallback">
+    <summary>List view of the 12-stage journey</summary>
+    <ol>
+      {stages.map((label, i) => (
+        <li><a href={`/stages/${label.toLowerCase().replace(/^\d+\.\s+/, '').replace(/\s+/g, '-')}/`}>{label}</a></li>
+      ))}
+    </ol>
+  </details>
+</div>
+
+<style>
+  .mermaid-journey :global(svg) { max-width: 100%; height: auto; }
+  .mermaid-fallback {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--sl-color-text-muted);
+  }
+  .mermaid-fallback ol { padding-left: 20px; }
+</style>
