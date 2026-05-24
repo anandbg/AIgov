@@ -36,6 +36,25 @@ Public launch (Phase 6 TAD-05) is gated on **all three** thresholds being met:
 
 Current status is rendered live on `/about/#density` by the `DensityStatus` component (reads `getCollection` at build time). The repo stays private until the threshold is met. Pitfall 11 — sparse-corpus search trust loss.
 
+## CI Gates
+
+Every pull request runs the following gates. Local-equivalent commands let you reproduce a failure before pushing.
+
+| Gate | Workflow | Local command | Tuning |
+|---|---|---|---|
+| Lighthouse (CWV) | `.github/workflows/ci-quality.yml` | `pnpm lighthouse` | Edit `.lighthouserc.cjs` (LCP/CLS thresholds, asserted audits) |
+| axe-core WCAG 2.2 AA | `.github/workflows/ci-axe.yml` | `pnpm axe` | Edit `scripts/run-axe.mjs` (`WCAG_TAGS`, `PATHS`, themes) |
+| Weight budgets | `.github/workflows/ci-weight-budget.yml` | `pnpm weight-budget` | Edit constants at top of `scripts/check-weight-budget.mjs` (`PER_IMAGE_KB = 100`, `PER_PAGE_KB = 500`) |
+
+**Phase 1 baseline (May 2026):**
+
+- Largest page: `/about/` ≈ 120 KB total (HTML + referenced CSS + JS + favicon)
+- Largest image: `favicon.svg` 0.6 KB
+- Lighthouse LCP/CLS: under thresholds on all tested routes
+- axe-core: 0 critical/serious violations across `/` and `/about/` in both light and dark
+
+Add new gates by following the same pattern: scoped path filter, `permissions: contents: read` only, root-level `pnpm`-script wrapper.
+
 ## Operational Cadences
 
 | Job | Workflow | Cadence | Phase |

@@ -1,0 +1,37 @@
+name: CI — axe (WCAG 2.2 AA)
+
+on:
+  pull_request:
+    paths:
+      - 'apps/site/**'
+      - 'packages/shared/**'
+      - 'scripts/run-axe.mjs'
+      - '.github/workflows/ci-axe.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-axe-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  axe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter @aigov/site exec playwright install --with-deps chromium
+      - name: Build site
+        run: pnpm --filter @aigov/site build
+      - name: Run axe
+        run: pnpm axe

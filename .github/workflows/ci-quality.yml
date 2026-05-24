@@ -1,0 +1,40 @@
+name: CI — Lighthouse
+
+on:
+  pull_request:
+    paths:
+      - 'apps/site/**'
+      - 'packages/shared/**'
+      - 'pnpm-workspace.yaml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.lighthouserc.cjs'
+      - '.github/workflows/ci-quality.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build site
+        run: pnpm --filter @aigov/site build
+      - name: Lighthouse CI
+        run: pnpm lighthouse
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}

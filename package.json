@@ -14,12 +14,19 @@
     "typecheck": "pnpm -r run typecheck",
     "lint": "pnpm -r run lint",
     "test": "pnpm -r run test",
-    "clean": "pnpm -r exec rm -rf node_modules dist .astro .turbo"
+    "clean": "pnpm -r exec rm -rf node_modules dist .astro .turbo",
+    "lighthouse": "lhci autorun",
+    "axe": "node ./scripts/run-axe.mjs",
+    "weight-budget": "node ./scripts/check-weight-budget.mjs apps/site/dist"
   },
   "devDependencies": {
     "@types/node": "22.10.1",
     "prettier": "3.4.2",
-    "typescript": "5.6.3"
+    "typescript": "5.6.3",
+    "@lhci/cli": "0.14.0",
+    "@axe-core/playwright": "4.10.2",
+    "playwright": "1.48.2",
+    "axe-core": "4.10.3"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
