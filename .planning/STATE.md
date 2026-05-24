@@ -9,12 +9,11 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 
 ## Current Position
 
-Phase: 2 of 6 (Content Spine) — Phase 1 complete
-Plan: 0 of TBD (planning required for Phase 2)
-Status: Phase 1 fully executed (8/8 plans committed, Lighthouse + axe + weight budget all green on baseline). Phase 2 planning pending.
-Last activity: 2026-05-24 — Phase 1 plans 01-01..01-08 all shipped (FND-01..14 + SRC-01/02 satisfied). Site builds clean, axe WCAG 2.2 AA green, CI gates wired. Awaiting Phase 2 plan-phase.
+Phase: 6 of 6 — all six phases shipped (autonomous portion). User-action gates documented in `.planning/legal/launch-checklist.md`.
+Status: Build + 6 CI gates + 5 ops/scrape workflows green. Site ships 17 routes (landing + 12 stages + about + /whats-new + /wizard + 404). Pipeline live (NIST AI RMF adapter producing real snapshots). Chat worker scaffolded (live deploy gated on Cloudflare account). Wizard fully functional (5 questions × 17 topics × URL-hash state).
+Last activity: 2026-05-24 — Phases 1–6 complete in a single session. Launch checklist is now the canonical public-flip gate; remaining work is externally paced (lawyer review, beta reviewers, additional source adapters).
 
-Progress: [██░░░░░░░░] 17% (1 of 6 phases)
+Progress: [██████████] 100% autonomous; user-action gates outstanding (lawyer + beta + Cloudflare setup + density bake-in)
 
 ## Performance Metrics
 

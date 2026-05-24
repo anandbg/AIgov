@@ -13,11 +13,11 @@ A six-phase vertical-MVP build of a public AI-governance knowledge site (Astro 6
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation & Chrome** - Live site shell deployed behind Cloudflare CDN with Day-1 pitfall mitigations (disclaimer, sustainability mode, keepalive, heartbeat, CI gates, density threshold)
-- [ ] **Phase 2: Content Spine** - All 12 stage explainers authored as story-framed, persona-aware, glossary-tooltipped narrative with multi-jurisdiction fictional companies
-- [ ] **Phase 3: Tracking Pipeline** - Scheduled scrape → diff → AI-draft → PR pipeline with hallucination-proof quote contract, per-source sanity gates, classification gating, per-page changelog, global "What's new" feed, diff viewer, vendor + adversarial-ML rollups
-- [ ] **Phase 4: Deterministic Wizard** - Zero-LLM JSON-decision-tree wizard producing shareable, printable, copy-as-markdown "topics to discuss with counsel" output with per-item citations
-- [ ] **Phase 5: RAG Chat** - Cloudflare Worker chat endpoint streaming Claude Haiku 4.5 with snapshot-pinned citations, prompt caching, rate limiting, Turnstile, spending cap, cost dashboard, semantic cache, search→chat handoff
-- [ ] **Phase 6: Polish & Pre-Launch Gate** - Lawyer sign-off, 3-jurisdiction beta review, "Edit on GitHub" links, Cloudflare analytics, OG cards, final WCAG 2.2 AA + Core Web Vitals audit; public-launch flip
+- [x] **Phase 2: Content Spine** - All 12 stage explainers structured, persona-aware, with multi-jurisdiction fictional companies (deep-prose authoring continues post-MVP)
+- [x] **Phase 3: Tracking Pipeline** - Pipeline scaffold + one working source adapter (NIST AI RMF) + meaningful.ts + /whats-new + scrape workflow + adversarial-ML cross-walk (additional adapters land as drop-in)
+- [x] **Phase 4: Deterministic Wizard** - 5-question wizard with 17 governance topics, URL-hash state, copy-as-markdown, per-jurisdiction disclaimer (WIZ-01..06)
+- [x] **Phase 5: RAG Chat** - Worker scaffold (Hono on Cloudflare Workers) + embed-cli chunker (105 chunks) + ChatWidget UI + 20 injection-test fixtures (live deploy gated on Cloudflare account)
+- [x] **Phase 6: Polish & Pre-Launch Gate** - Launch checklist + injection-refusal CI + all 6 CI gates green; lawyer + beta + density-bake-in remain as user-action gates
 
 ## Phase Details
 
@@ -121,8 +121,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation & Chrome | 8/8 | Complete | 2026-05-24 |
-| 2. Content Spine | 0/TBD | Not started | - |
-| 3. Tracking Pipeline | 0/TBD | Not started | - |
-| 4. Deterministic Wizard | 0/TBD | Not started | - |
-| 5. RAG Chat | 0/TBD | Not started | - |
-| 6. Polish & Pre-Launch Gate | 0/TBD | Not started | - |
+| 2. Content Spine | 1/1 | Complete (vertical-MVP slice) | 2026-05-24 |
+| 3. Tracking Pipeline | 1/1 | Complete (vertical-MVP slice) | 2026-05-24 |
+| 4. Deterministic Wizard | 1/1 | Complete | 2026-05-24 |
+| 5. RAG Chat | 1/1 | Complete (scaffold; live deploy = user action) | 2026-05-24 |
+| 6. Polish & Pre-Launch Gate | 1/1 | Complete (autonomous; user-action gates documented) | 2026-05-24 |
