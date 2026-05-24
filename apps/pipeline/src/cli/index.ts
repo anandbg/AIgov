@@ -11,11 +11,16 @@
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { stringify as yamlStringify } from "yaml";
 import type { SourceAdapter } from "../lib/source-adapter.js";
 import { isMeaningful } from "../lib/meaningful.js";
 
 import nist from "../sources/nist-ai-rmf/index.js";
+
+// Resolve the repo root from this file's location so the CLI works regardless of cwd.
+// apps/pipeline/src/cli/index.ts → ../../../../ is the repo root.
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 
 const SOURCES: Record<string, SourceAdapter> = {
   "nist-ai-rmf": nist,
@@ -25,7 +30,7 @@ const SOURCES: Record<string, SourceAdapter> = {
   // ...
 };
 
-const SITE_REGULATIONS_DIR = path.resolve("apps/site/src/content/regulations");
+const SITE_REGULATIONS_DIR = path.join(REPO_ROOT, "apps/site/src/content/regulations");
 
 async function run(sourceId: string) {
   const adapter = SOURCES[sourceId];
@@ -65,7 +70,9 @@ async function run(sourceId: string) {
   // Force materialChange based on meaningful result + downgrade classification:
   result.frontmatter.materialChange = true;
 
-  const fm = "---\n" + yamlStringify(result.frontmatter) + "---\n\n";
+  // defaultStringType: "QUOTE_DOUBLE" forces date-looking strings to be quoted
+  // so YAML on the read side doesn't reparse them into Date objects.
+  const fm = "---\n" + yamlStringify(result.frontmatter, { defaultStringType: "QUOTE_DOUBLE", defaultKeyType: "PLAIN" }) + "---\n\n";
   await writeFile(filepath, fm + result.body, "utf-8");
   console.log(`[${sourceId}] wrote ${path.relative(process.cwd(), filepath)}`);
 }

@@ -62,21 +62,24 @@
   }
 }
 
-/* PersonaSection visibility — driven by data-persona on <html>. Default = all visible. */
-html[data-persona]:not([data-persona="all"]) section[data-for-persona]:not([data-for-persona="all"]) {
-  display: none;
-}
-html[data-persona="exec"] section[data-for-persona="exec"],
-html[data-persona="engineer"] section[data-for-persona="engineer"],
-html[data-persona="compliance"] section[data-for-persona="compliance"],
-html:not([data-persona]) section[data-for-persona],
-html[data-persona="all"] section[data-for-persona] {
-  display: block;
+/* PersonaSection visibility — driven by data-persona on <html>. Default = all visible.
+ *
+ * Hide ONLY non-matching personas; the matching one keeps its component-scoped display.
+ * Written as exact-mismatch selectors (not "hide then re-show") to avoid CSS specificity
+ * inversion against component-scoped styles like `.persona-section { display: grid; }`. */
+html[data-persona="exec"] section[data-for-persona]:not([data-for-persona="exec"]):not([data-for-persona="all"]),
+html[data-persona="engineer"] section[data-for-persona]:not([data-for-persona="engineer"]):not([data-for-persona="all"]),
+html[data-persona="compliance"] section[data-for-persona]:not([data-for-persona="compliance"]):not([data-for-persona="all"]) {
+  display: none !important;
 }
 
-/* JurisdictionLens visibility — parallel structure for data-jurisdiction */
-html[data-jurisdiction]:not([data-jurisdiction="all"]) aside[data-for-jurisdiction]:not([data-for-jurisdiction="all"]) {
-  display: none;
+/* JurisdictionLens visibility — same exact-mismatch pattern. */
+html[data-jurisdiction="eu"] aside[data-for-jurisdiction]:not([data-for-jurisdiction="eu"]):not([data-for-jurisdiction="all"]),
+html[data-jurisdiction="uk"] aside[data-for-jurisdiction]:not([data-for-jurisdiction="uk"]):not([data-for-jurisdiction="all"]),
+html[data-jurisdiction="us"] aside[data-for-jurisdiction]:not([data-for-jurisdiction="us"]):not([data-for-jurisdiction="all"]),
+html[data-jurisdiction="apac"] aside[data-for-jurisdiction]:not([data-for-jurisdiction="apac"]):not([data-for-jurisdiction="all"]),
+html[data-jurisdiction="global"] aside[data-for-jurisdiction]:not([data-for-jurisdiction="global"]):not([data-for-jurisdiction="all"]) {
+  display: none !important;
 }
 
 /* Focus ring (WCAG 2.4.7) */

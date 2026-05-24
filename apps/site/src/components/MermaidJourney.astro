@@ -4,19 +4,21 @@ interface Props {
 }
 const { currentStage } = Astro.props as Props;
 const wrapperClass = ['mermaid-journey', currentStage ? `current-S${currentStage}` : ''].filter(Boolean).join(' ');
-const stages = [
-  '1. AI Policy',
-  '2. Risk Tiering',
-  '3. Risk Check',
-  '4. Compliance',
-  '5. Third-party AI Risk',
-  '6. Data Controls',
-  '7. Continuous Red-teaming',
-  '8. Documentation',
-  '9. Accountability',
-  '10. Agentic AI Oversight',
-  '11. Incident Response',
-  '12. Monitoring',
+
+// Canonical (label, slug) pairs — slug must match the MDX filename under apps/site/src/content/docs/stages/.
+const stages: Array<{ label: string; slug: string }> = [
+  { label: '1. AI Policy',              slug: '01-ai-policy' },
+  { label: '2. Risk Tiering',           slug: '02-risk-tiering' },
+  { label: '3. Risk Check',             slug: '03-risk-check' },
+  { label: '4. Compliance',             slug: '04-compliance' },
+  { label: '5. Third-party AI Risk',    slug: '05-third-party-risk' },
+  { label: '6. Data Controls',          slug: '06-data-controls' },
+  { label: '7. Continuous Red-teaming', slug: '07-red-teaming' },
+  { label: '8. Documentation',          slug: '08-documentation' },
+  { label: '9. Accountability',         slug: '09-accountability' },
+  { label: '10. Agentic AI Oversight',  slug: '10-agentic-oversight' },
+  { label: '11. Incident Response',     slug: '11-incident-response' },
+  { label: '12. Monitoring',            slug: '12-monitoring' },
 ];
 ---
 <div class={wrapperClass}>
@@ -32,8 +34,8 @@ flowchart LR
   <details class="mermaid-fallback">
     <summary>List view of the 12-stage journey</summary>
     <ol>
-      {stages.map((label, i) => (
-        <li><a href={`/stages/${label.toLowerCase().replace(/^\d+\.\s+/, '').replace(/\s+/g, '-')}/`}>{label}</a></li>
+      {stages.map((s) => (
+        <li><a href={`/stages/${s.slug}/`}>{s.label}</a></li>
       ))}
     </ol>
   </details>
