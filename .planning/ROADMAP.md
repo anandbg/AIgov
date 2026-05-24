@@ -12,7 +12,7 @@ A six-phase vertical-MVP build of a public AI-governance knowledge site (Astro 6
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation & Chrome** - Live site shell deployed behind Cloudflare CDN with Day-1 pitfall mitigations (disclaimer, sustainability mode, keepalive, heartbeat, CI gates, density threshold)
+- [x] **Phase 1: Foundation & Chrome** - Live site shell deployed behind Cloudflare CDN with Day-1 pitfall mitigations (disclaimer, sustainability mode, keepalive, heartbeat, CI gates, density threshold)
 - [ ] **Phase 2: Content Spine** - All 12 stage explainers authored as story-framed, persona-aware, glossary-tooltipped narrative with multi-jurisdiction fictional companies
 - [ ] **Phase 3: Tracking Pipeline** - Scheduled scrape → diff → AI-draft → PR pipeline with hallucination-proof quote contract, per-source sanity gates, classification gating, per-page changelog, global "What's new" feed, diff viewer, vendor + adversarial-ML rollups
 - [ ] **Phase 4: Deterministic Wizard** - Zero-LLM JSON-decision-tree wizard producing shareable, printable, copy-as-markdown "topics to discuss with counsel" output with per-item citations
@@ -34,14 +34,14 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Flipping the `sustainabilityMode` flag in `apps/site/src/config/site.ts` causes "maintained at low cadence" notice to render site-wide and `MAINTENANCE.md` + `About` page acknowledge single-author status, escalation plan, content-density threshold (12 stages + 10+ sources + 60+ glossary terms), and lawyer-review outreach status
 **Plans**: 8 plans
 Plans:
-- [ ] 01-01-PLAN.md — Initialize standalone git repo + Node/pnpm runtime + SETUP.md human-action checklist
-- [ ] 01-02-PLAN.md — pnpm monorepo scaffold + Zod schemas in packages/shared (FND-01)
-- [ ] 01-03-PLAN.md — Astro 6 + Starlight 0.39 + Tailwind v4 site scaffold + Pagefind search (FND-02, SRC-01, SRC-02)
-- [ ] 01-04-PLAN.md — Five content collections wired to @aigov/shared schemas + fixture content (FND-04)
-- [ ] 01-05-PLAN.md — Shell components + global.css theme + disclaimer surface + print stylesheet (FND-05, FND-06, FND-11, FND-14)
-- [ ] 01-06-PLAN.md — site.ts config + About page + MAINTENANCE/SECURITY/CONTRIBUTING docs + density UI (FND-07, FND-12, FND-13)
-- [ ] 01-07-PLAN.md — GitHub Pages deploy + keepalive + heartbeat workflows + Cloudflare CDN docs (FND-03, FND-08, FND-09)
-- [ ] 01-08-PLAN.md — CI quality gates: Lighthouse + axe-core + weight budget (FND-10)
+- [x] 01-01-PLAN.md — Initialize standalone git repo + Node/pnpm runtime + SETUP.md human-action checklist
+- [x] 01-02-PLAN.md — pnpm monorepo scaffold + Zod schemas in packages/shared (FND-01)
+- [x] 01-03-PLAN.md — Astro 6 + Starlight 0.39 + Tailwind v4 site scaffold + Pagefind search (FND-02, SRC-01, SRC-02)
+- [x] 01-04-PLAN.md — Five content collections wired to @aigov/shared schemas + fixture content (FND-04)
+- [x] 01-05-PLAN.md — Shell components + global.css theme + disclaimer surface + print stylesheet (FND-05, FND-06, FND-11, FND-14)
+- [x] 01-06-PLAN.md — site.ts config + About page + MAINTENANCE/SECURITY/CONTRIBUTING docs + density UI (FND-07, FND-12, FND-13)
+- [x] 01-07-PLAN.md — GitHub Pages deploy + keepalive + heartbeat workflows + Cloudflare CDN docs (FND-03, FND-08, FND-09)
+- [x] 01-08-PLAN.md — CI quality gates: Lighthouse + axe-core + weight budget (FND-10)
 **UI hint**: yes
 
 ### Phase 2: Content Spine
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation & Chrome | 0/8 | Not started | - |
+| 1. Foundation & Chrome | 8/8 | Complete | 2026-05-24 |
 | 2. Content Spine | 0/TBD | Not started | - |
 | 3. Tracking Pipeline | 0/TBD | Not started | - |
 | 4. Deterministic Wizard | 0/TBD | Not started | - |

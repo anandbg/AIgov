@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-05-24)
 
 ## Current Position
 
-Phase: 1 of 6 (Foundation & Chrome)
-Plan: 0 of 8 executed (planning complete)
-Status: Ready to execute — Wave 1 (01-01 git+runtime, 01-02 monorepo+schemas) is autonomous-safe; remainder depends on user actions documented in SETUP.md
-Last activity: 2026-05-24 — Phase 1 CONTEXT.md, UI-SPEC.md (6/6 dimensions PASS, 1 FLAG non-blocking), and 8 PLAN.md files committed (3 waves, all 16 reqs covered, plan-checker BLOCKER resolved)
+Phase: 2 of 6 (Content Spine) — Phase 1 complete
+Plan: 0 of TBD (planning required for Phase 2)
+Status: Phase 1 fully executed (8/8 plans committed, Lighthouse + axe + weight budget all green on baseline). Phase 2 planning pending.
+Last activity: 2026-05-24 — Phase 1 plans 01-01..01-08 all shipped (FND-01..14 + SRC-01/02 satisfied). Site builds clean, axe WCAG 2.2 AA green, CI gates wired. Awaiting Phase 2 plan-phase.
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [██░░░░░░░░] 17% (1 of 6 phases)
 
 ## Performance Metrics
 
