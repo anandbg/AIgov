@@ -68,19 +68,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            BRANCH="scrape/vendors-$(date -u +%Y%m%d)"
-            git checkout -b "$BRANCH"
-            git add apps/site/src/content/regulations/ .heartbeat/
-            git commit -m "data(vendors): daily scrape $(date -u +%Y-%m-%d)"
-            git push -u origin "$BRANCH"
-            gh pr create \
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "No changes — skipping PR creation"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          BRANCH="scrape/vendors-$(date -u +%Y%m%d)-$(git rev-parse --short HEAD)"
+          git checkout -b "$BRANCH"
+          git add apps/site/src/content/regulations/ .heartbeat/
+          git commit -m "data(vendors): daily scrape $(date -u +%Y-%m-%d)"
+          git push -u origin "$BRANCH"
+          if ! gh pr create \
               --title "data(vendors): daily scrape $(date -u +%Y-%m-%d)" \
               --body "Automated vendor-policy scrape. Review the diff — vendor AUPs frequently update silently, so any substantive change deserves a quick eyes-on before merge." \
               --label "scrape,scope-vendors" \
-              --base main
-          else
-            echo "No changes — skipping PR creation"
+              --base main 2>&1 | tee /tmp/pr-output.log
+          then
+            echo ""
+            echo "::warning::Could not open PR automatically — open it manually:"
+            echo "::warning::  https://github.com/${{ github.repository }}/pull/new/$BRANCH"
+            echo ""
+            cat /tmp/pr-output.log
           fi

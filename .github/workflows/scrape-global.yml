@@ -58,19 +58,32 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ -n "$(git status --porcelain)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            BRANCH="scrape/global-$(date -u +%Y%m%d)"
-            git checkout -b "$BRANCH"
-            git add apps/site/src/content/regulations/ .heartbeat/
-            git commit -m "data(global): weekly scrape $(date -u +%Y-%m-%d)"
-            git push -u origin "$BRANCH"
-            gh pr create \
-              --title "data(global): weekly scrape $(date -u +%Y-%m-%d)" \
-              --body "Automated scrape PR (TRK-08). Per-source classification, reviewer checklist, and verify-quotes CI gate will populate as adapters expand. Review the diff before merging." \
-              --label "scrape,scope-global" \
-              --base main
-          else
+          if [[ -z "$(git status --porcelain)" ]]; then
             echo "No changes — skipping PR creation"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Include a short commit-sha suffix on the branch name so a re-run on
+          # the same day doesn't collide with a previously-pushed branch.
+          BRANCH="scrape/global-$(date -u +%Y%m%d)-$(git rev-parse --short HEAD)"
+          git checkout -b "$BRANCH"
+          git add apps/site/src/content/regulations/ .heartbeat/
+          git commit -m "data(global): weekly scrape $(date -u +%Y-%m-%d)"
+          git push -u origin "$BRANCH"
+          # PR creation needs "Allow GitHub Actions to create and approve pull
+          # requests" enabled at Settings → Actions → General. If that's off,
+          # log the manual link instead of failing the whole run — the branch
+          # is already pushed, so the maintainer can open the PR by clicking.
+          if ! gh pr create \
+              --title "data(global): weekly scrape $(date -u +%Y-%m-%d)" \
+              --body "Automated scrape PR. Review the diff before merging — the meaningful-diff filter has already discarded whitespace and trivial edits." \
+              --label "scrape,scope-global" \
+              --base main 2>&1 | tee /tmp/pr-output.log
+          then
+            echo ""
+            echo "::warning::Could not open PR automatically — open it manually:"
+            echo "::warning::  https://github.com/${{ github.repository }}/pull/new/$BRANCH"
+            echo ""
+            cat /tmp/pr-output.log
           fi
