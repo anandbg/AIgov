@@ -1,0 +1,38 @@
+---
+title: "1. Get an Azure subscription"
+description: "Foundry lives inside an Azure subscription. A fresh tenant has none — here's the signup, step by step."
+subtitle: "The empty-tenant starting line."
+---
+
+import Shot from '~/components/Shot.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Everything in Foundry bills to, and lives inside, an **Azure subscription**. A brand-new tenant has zero. So step one is to create one.
+
+## In plain English
+
+A subscription is just the account that everything sits in and bills to. No subscription, no resources — you can't even start. This is the one step where you'll need a card (Microsoft verifies you're real and gives you free credit; you're not charged unless you go past it).
+
+## Follow along
+
+<Steps>
+
+1. Open the **Subscriptions** blade in the [Azure portal](https://portal.azure.com). A fresh tenant shows **"0 of 0"** — the blocker.
+
+   <Shot src="00a-no-subscription.png" caption="The Subscriptions blade with no subscription — nothing can be built yet." />
+
+2. Start an **Azure free account** (the signup at <code>signup.azure.com</code>). Step 1 is the agreement — tick **"I represent that I am the individual…"** (the Microsoft Customer Agreement) and click **Next**.
+
+   <Shot src="00b-signup-agreement.png" caption="Signup step 1 — accept the Microsoft Customer Agreement (boxed)." />
+
+3. Fill in the profile (country **United Kingdom**, name, email). Then complete **phone → SMS verify → card**. Microsoft gives free credit; the card is only for identity + overage.
+
+   <Shot src="00c-signup-profile.png" caption="Signup step 2 — the profile form." />
+
+</Steps>
+
+<Aside type="tip" title="What you end up with">
+A live subscription (mine was named **"Azure subscription 1"**). It starts as a **free-credit "Azure Plan"** with a spending limit — remember that, because it's why the model-deploy step later hits a wall.
+</Aside>
+
+**Next:** [create the Foundry resource →](/foundry/02-foundry-resource/)

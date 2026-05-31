@@ -1,0 +1,38 @@
+---
+title: "3. Switch to the new Foundry experience"
+description: "The classic portal has a 'New Foundry' toggle — flip it to the redesigned ai.azure.com experience used for the rest of this build."
+subtitle: "One toggle changes the whole portal."
+---
+
+import Shot from '~/components/Shot.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Foundry currently has two interfaces: the **classic** one and a redesigned **new experience**. The rest of this walkthrough uses the new one, so flip the toggle now.
+
+## In plain English
+
+Microsoft is mid-redesign, so there are two versions of the same product side by side. There's a switch at the top that flips between them. We use the new one because it's where agents, models and playgrounds now live together.
+
+## Follow along
+
+<Steps>
+
+1. On any Foundry portal page, find the **"New Foundry"** toggle at the top (the banner reads *"Try the new Microsoft Foundry experience"*). Flip it on.
+
+   <Shot src="03a-classic-deployments-newtoggle.png" caption="The classic Models page — the 'New Foundry' toggle is boxed, top-centre." />
+
+2. The URL switches to `ai.azure.com/nextgen/…` and you land on the new **Home**: top nav **Home · Discover · Build · Operate · Docs**, with cards for *Create agents / Explore playgrounds / Find models*.
+
+   <Shot src="03b-new-foundry-home.png" caption="The new Foundry home." />
+
+3. A welcome dialog explains the three pillars (Agents / Model deployments / Playgrounds). Close it (the **X**) to continue.
+
+   <Shot src="03c-new-foundry-welcome-dialog.png" caption="The 'Welcome to the new Microsoft Foundry' intro — close it to proceed." />
+
+</Steps>
+
+<Aside type="tip" title="Orientation">
+**Discover** = browse + deploy models. **Build** = agents, deployments, tools, knowledge. **Operate** = quota and monitoring. You'll use all three.
+</Aside>
+
+**Next:** [hit the quota wall →](/foundry/04-quota-wall/)

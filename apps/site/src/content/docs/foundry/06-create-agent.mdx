@@ -1,0 +1,56 @@
+---
+title: "6. Create the agent — and remove the Bing leak"
+description: "Create a Foundry agent and watch it ship, by default, with a Bing web-search tool that sends data outside the Azure compliance boundary. Then remove it."
+subtitle: "The default agent is not safe. Step one of controlled egress is taking something away."
+---
+
+import Shot from '~/components/Shot.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Custom tools live on an **agent**, not on a bare model playground (the playground's *Add* button is greyed out with the hint *"some tools will require creating an agent"*). So we create a real agent — and immediately find the thing controlled egress exists to remove.
+
+## In plain English
+
+When you create an agent, Foundry "helpfully" gives it the ability to search the web. Sounds convenient. But that web search runs through **Bing as a separate consumer service** — and the portal itself warns the data **"will flow outside the Azure compliance boundary."** For a sensitive workload that's a leak baked into the defaults. So the very first thing we do to a new agent is **take the web search away.**
+
+## Create the agent
+
+<Steps>
+
+1. **Build → Agents → Create agent.**
+
+   <Shot src="08b-agents-create-btn.png" caption="The Agents page — 'Create agent' boxed." />
+
+2. Name it `controlled-egress-scraper` → **Create and open playground**.
+
+   <Shot src="08c-agent-name-filled.png" caption="Naming the agent (boxed)." />
+
+3. The agent designer opens — Instructions, Tools, Knowledge, and a model.
+
+   <Shot src="08a-agent-create.png" caption="The fresh agent designer." />
+
+</Steps>
+
+## Find the leak the default ships with
+
+<Shot src="08d-default-agent-bing-risk.png" caption="The default agent already has 'Web search (Grounding with Bing)' attached — and warns: 'Customer data will flow outside the Azure compliance boundary.' That is exactly the uncontrolled egress we must remove." />
+
+<Aside type="caution" title="This is the whole point">
+A default Foundry agent has an **open, uncontrolled exit** to the internet via Bing. Anyone building for sensitive data who doesn't notice this has already lost control of egress on day one. Controlled egress starts by **deleting it**.
+</Aside>
+
+## Remove the Bing web search
+
+<Steps>
+
+1. In **Tools**, on the **Web search** row, open the **⋮** menu → **Remove**.
+
+   <Shot src="08f-remove-bing.png" caption="Remove the Web search tool ('Remove' boxed)." />
+
+2. The Tools list is now **empty** — the agent has **no internet access at all**. That's the clean baseline we want before adding one narrow, allowed exit.
+
+   <Shot src="08g-bing-removed.png" caption="Tools empty — no egress at all. A clean default-deny baseline." />
+
+</Steps>
+
+**Next:** [add the one allowed exit — an allow-listed tool →](/foundry/07-allowlisted-tool/)

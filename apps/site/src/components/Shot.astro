@@ -1,0 +1,44 @@
+---
+// Shot.astro — a captioned tutorial screenshot for the Agent Academy walkthrough.
+// Usage: <Shot src="04d-quota-wall-all-regions.png" alt="..." caption="..." />
+// `src` is a filename inside public/agent-academy/. The component prefixes the
+// site base (/AIgov/) automatically so it resolves both locally and on Pages.
+interface Props {
+  src: string;
+  alt?: string;
+  caption?: string;
+}
+const { src, alt = '', caption = '' } = Astro.props;
+const base = import.meta.env.BASE_URL; // "/AIgov/"
+const href = `${base}agent-academy/${src}`;
+---
+<figure class="aa-shot">
+  <a href={href} target="_blank" rel="noopener">
+    <img src={href} alt={alt || caption} loading="lazy" decoding="async" />
+  </a>
+  {caption && <figcaption set:html={caption} />}
+</figure>
+
+<style>
+  .aa-shot {
+    margin: 1.5rem 0;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--sl-color-gray-7, #f6f7f8);
+  }
+  .aa-shot img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .aa-shot figcaption {
+    font-size: var(--sl-text-sm);
+    line-height: 1.45;
+    color: var(--sl-color-gray-2);
+    padding: 0.55rem 0.85rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+    background: var(--sl-color-gray-6, #eceef0);
+  }
+  .aa-shot a { display: block; }
+</style>

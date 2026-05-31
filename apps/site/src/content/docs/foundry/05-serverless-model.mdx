@@ -1,0 +1,61 @@
+---
+title: "5. Deploy a model without quota — serverless"
+description: "Serverless / Models-as-a-Service deploy as pay-per-token endpoints and need no Azure OpenAI quota — the fast way past the wall."
+subtitle: "Skip the quota queue entirely."
+---
+
+import Shot from '~/components/Shot.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+There's a class of models that bills **per token** on its own endpoint and draws **no Azure OpenAI quota** at all — *serverless*, or Models-as-a-Service (MaaS). These sail straight past the wall from the last page.
+
+## In plain English
+
+The quota wall is only for the Azure OpenAI models. **Serverless** models are different — you "subscribe" to them through the Azure Marketplace and pay per token, like a metered tap. No allowance to request, no waiting. The catch: **not every serverless model is offered in every region**, so you may try two or three before one works.
+
+## What's available where (the real experience)
+
+In **UK South**, two serverless models refused before one worked:
+
+- **Cohere Command** → Deploy was **disabled** (not offered serverless in UK South).
+- **DeepSeek-V3.1** → Deploy failed: *"not available."*
+
+   <Shot src="06a-serverless-v31-unavailable.png" caption="DeepSeek-V3.1 — 'not available' in UK South (red error toasts). Serverless availability is per-region; check before committing." />
+
+- **DeepSeek-R1** → **worked.** Deploy → Default settings → it dropped straight into the playground with **no quota dialog at all**, and replied to a test prompt.
+
+   <Shot src="06b-r1-deployed-working.png" caption="DeepSeek-R1 deployed and answering 'working' — no quota wall. Note the Tools / Knowledge / Memory panel on the left." />
+
+<Aside type="caution" title="Match the model to the job">
+DeepSeek-R1 proves a model deploys with zero quota — but it's a **reasoning** model, and DeepSeek don't recommend it for tool/function calling. Our agent's whole job is calling a tool reliably. So for the **agent's** brain we deploy a model built for tool-calling next.
+</Aside>
+
+## Deploy a tool-calling model (Mistral Small)
+
+`mistral-small-2503` (Mistral Small 3.1) is a strong native function-caller, 128k context, and **serverless** — an ideal, cheap agent brain.
+
+<Steps>
+
+1. **Discover → Mistral AI** (or *View all models* → Source = Mistral AI). With **"Available in my project"** on, open **mistral-small-2503** → **Deploy**.
+
+   <Shot src="07a-mistral-detail-deploy.png" caption="Mistral Small detail page — Deploy boxed." />
+
+2. Choose **Default settings**.
+
+   <Shot src="07b-mistral-deploy-default.png" caption="Default vs Custom settings — Default boxed." />
+
+3. The **Azure Marketplace terms** dialog → **Agree and proceed**. This consents to pay-per-token billing on your existing subscription — there's **no card entry** here.
+
+   <Shot src="07c-mistral-marketplace-terms.png" caption="Marketplace terms — 'Agree and proceed' boxed. This is a serverless (metered) subscription." />
+
+4. It deploys and lands in the playground (~1–2 min to warm up). Test it: ask *"In one short sentence, what can you do?"* — it answers. Note the **Tools → Add** button (boxed): that's where the agent's scraping tool will attach.
+
+   <Shot src="07d-mistral-deployed-working.png" caption="mistral-small-2503 deployed and answering. The boxed Tools → Add is the attach point for the next steps." />
+
+</Steps>
+
+<Aside type="tip" title="The takeaway">
+The fastest way past a new subscription's quota wall is a **serverless** model. Pick one that's (a) actually available serverless in your region and (b) good at **tool calling** if you're building an agent.
+</Aside>
+
+**Next:** [create the agent and remove the Bing leak →](/foundry/06-create-agent/)

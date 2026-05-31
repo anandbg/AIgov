@@ -1,0 +1,53 @@
+---
+title: "Agent Academy: build a controlled-egress agent on Foundry"
+description: "A click-by-click walkthrough — build a web-scraping AI agent in Azure AI Foundry that can only reach an allow-listed site, with every step screenshotted."
+subtitle: "From an empty Azure tenant to a working agent that can't leak data — every screen, every click."
+---
+
+import { Steps, Card, CardGrid, Aside } from '@astrojs/starlight/components';
+
+This is a hands-on walkthrough. By the end you'll have built a **web-scraping AI agent in [Azure AI Foundry](https://ai.azure.com)** that can only reach the **one website you allow it to** — and nothing else. Every step has a screenshot, with the thing you click or type **boxed in red**.
+
+It pairs with the [AI Governance Journey](/stages/10-agentic-oversight/): that explains *why* an agent needs controlled egress; this shows *how* to actually build one.
+
+## In plain English
+
+Imagine giving an intern a research task. A careless setup hands them the keys to the whole building and the company credit card. A careful setup gives them one library card, for one library, and a rule: *bring back what you read, send nothing out.*
+
+A normal AI agent is the careless version — by default Foundry wires it up with **web search that quietly sends your text out to Bing, outside the Azure compliance boundary.** The agent we build is the careful version. It has **no general internet access at all**. Its only way out is a single, named tool that can fetch from **one allow-listed website**. If it tries anything else, it simply can't.
+
+That pattern — *one narrow, named, allow-listed exit and a default-deny on everything else* — is **controlled egress**. It's the difference between an agent you can put in front of sensitive data and one you can't.
+
+## What you'll build
+
+<CardGrid>
+  <Card title="The goal" icon="rocket">
+    A Foundry **agent** with one custom **OpenAPI tool** locked to a single host. No Bing, no open web. The model physically cannot reach anything off the allow-list.
+  </Card>
+  <Card title="The honest detours" icon="warning">
+    A brand-new subscription can't deploy a model (quota = 0). Serverless gets past that. And the new Agent Service has **no usable model in UK South** — a real finding you'll hit too.
+  </Card>
+</CardGrid>
+
+## The map
+
+<Steps>
+
+1. **[Get an Azure subscription](/foundry/01-subscription/)** — the empty-tenant starting line.
+2. **[Create the Foundry resource](/foundry/02-foundry-resource/)** — a resource group, the Foundry "building", and your first project.
+3. **[Switch to the new Foundry experience](/foundry/03-new-experience/)** — the redesigned `ai.azure.com` portal.
+4. **[Hit the quota wall](/foundry/04-quota-wall/)** — why a new subscription can't deploy a model, and the upgrade that *still* doesn't fix it.
+5. **[Deploy a model without quota](/foundry/05-serverless-model/)** — serverless / pay-per-token models that skip the wall.
+6. **[Create the agent + remove the Bing leak](/foundry/06-create-agent/)** — and see the egress risk the default ships with.
+7. **[Add the one allowed exit](/foundry/07-allowlisted-tool/)** — an allow-listed OpenAPI fetch tool.
+8. **[Instructions, and the moment of truth](/foundry/08-instructions-and-run/)** — the natural-language contract, plus the UK South model-desert finding and the sovereign production path.
+
+</Steps>
+
+<Aside type="note" title="Where this was built">
+On a personal sandbox tenant, **free tier only** (no £900/month Azure Firewall), region **UK South**. That keeps it reproducible — and surfaces every real-world wall a beginner will hit. The production-grade, UK-sovereign version is described at the end.
+</Aside>
+
+<Aside type="caution" title="Not legal or compliance advice">
+This is an engineering walkthrough. For an OFFICIAL-SENSITIVE or regulated deployment, read the [Data Controls](/stages/06-data-controls/) and [Third-party AI Risk](/stages/05-third-party-risk/) stages and talk to your security and compliance owners first.
+</Aside>

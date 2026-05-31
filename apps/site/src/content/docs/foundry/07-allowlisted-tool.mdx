@@ -1,0 +1,79 @@
+---
+title: "7. Add the one allowed exit — an allow-listed tool"
+description: "Give the agent a single custom OpenAPI tool whose server URL is locked to one host. That declared host is the agent's entire world."
+subtitle: "Default-deny, plus exactly one named, allow-listed door."
+---
+
+import Shot from '~/components/Shot.astro';
+import { Steps, Aside, Code } from '@astrojs/starlight/components';
+
+The agent now has no internet. We add back **one** exit — a custom **OpenAPI tool** whose spec only knows about a single host. The agent can call that host and **nothing else**, because nothing else exists in its world.
+
+## In plain English
+
+An OpenAPI tool is just a description of an API: *here's the address, here's the one thing you can ask it.* Whatever host you write into that description is the only place the agent can reach. Leave out every other site and they're simply unreachable — not "blocked by a rule it might talk its way around", but *not present*. That's why this is the heart of controlled egress.
+
+For the demo the allowed host is Wikipedia's article-summary API. In production you'd point it at your own fetch-proxy that enforces a real allow-list (covered at the end).
+
+## Add the tool
+
+<Steps>
+
+1. **Tools → Add → Browse all tools.**
+
+   <Shot src="09a-agent-add-tool-menu.png" caption="Tools → Add menu." />
+
+2. Open the **Custom** tab → choose **OpenAPI tool**. (The other custom option is MCP.)
+
+   <Shot src="09b-custom-tools-tab.png" caption="The Custom tab — OpenAPI tool boxed." />
+
+3. Configure it: **Name** `allowlisted_fetch`, **Authentication = Anonymous**, and paste an **OpenAPI 3.0 schema** whose `servers` URL is locked to one host. Here it's `https://en.wikipedia.org/api/rest_v1` with a single `GET /page/summary/{title}` operation.
+
+   <Shot src="09c-openapi-tool-config.png" caption="The OpenAPI tool config — name, Anonymous auth, and a schema whose server is locked to one host." />
+
+</Steps>
+
+The schema that does the locking:
+
+<Code
+  lang="json"
+  title="allowlisted_fetch — the agent's only exit"
+  code={`{
+  "openapi": "3.0.1",
+  "info": { "title": "Allowlisted Fetch", "version": "1.0.0" },
+  "servers": [
+    { "url": "https://en.wikipedia.org/api/rest_v1" }
+  ],
+  "paths": {
+    "/page/summary/{title}": {
+      "get": {
+        "operationId": "getArticleSummary",
+        "summary": "Fetch the summary of an allow-listed Wikipedia article",
+        "parameters": [
+          { "name": "title", "in": "path", "required": true,
+            "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Article summary" } }
+      }
+    }
+  }
+}`}
+/>
+
+<Steps>
+
+4. **Create tool.** `allowlisted_fetch` is now the agent's **only** tool — its entire connection to the outside world.
+
+   <Shot src="09d-allowlisted-tool-added.png" caption="allowlisted_fetch added — the agent's sole tool, locked to one host." />
+
+</Steps>
+
+<Aside type="tip" title="Why the host lock is the control">
+The agent can't invent a new `servers` URL. Whatever you declare is the boundary. One host in the spec = one host reachable. That's controlled egress enforced by *construction*, not by hoping the model behaves.
+</Aside>
+
+<Aside type="note" title="Production hardening">
+Point the `servers` URL at an **internal, VNet-integrated fetch-proxy** that enforces an **FQDN allow-list** (NSG / Azure Firewall, default-deny). Same shape, real network-level egress control — the model still has no other route out. See the [sovereign path](/foundry/08-instructions-and-run/#the-sovereign-production-path).
+</Aside>
+
+**Next:** [instructions, and the moment of truth →](/foundry/08-instructions-and-run/)

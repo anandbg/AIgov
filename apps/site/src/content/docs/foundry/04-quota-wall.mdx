@@ -1,0 +1,68 @@
+---
+title: "4. Hit the quota wall"
+description: "A brand-new subscription can't deploy an Azure OpenAI model — quota is zero everywhere. The PAYG upgrade doesn't fully fix it. Here's the wall, in full."
+subtitle: "The single biggest surprise for a Foundry beginner."
+---
+
+import Shot from '~/components/Shot.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+An agent needs a **model** (a "brain"). So the natural next move is to deploy one. This is where almost every beginner gets stuck — and it's worth understanding *why*, because the error message doesn't explain it.
+
+## In plain English
+
+A model deployment needs **quota** — an allowance of tokens-per-minute that Microsoft grants per subscription, per region, per model. A brand-new free subscription is granted **zero** for the modern models. So the deploy button is there, you click it, and every option says *"insufficient quota."* It looks like you did something wrong. You didn't — the cupboard is just empty until you ask for stock.
+
+## The wall
+
+<Steps>
+
+1. **Discover → Models** → search `gpt-4o-mini` → open the card.
+
+   <Shot src="04a-new-catalog-gpt4omini.png" caption="The model catalogue filtered to gpt-4o-mini (boxed)." />
+
+2. On the model page, click **Deploy**.
+
+   <Shot src="04b-new-model-detail-deploy.png" caption="The model detail page — the Deploy button is boxed." />
+
+3. Choose **Default settings** (global standard + default quota), versus Custom (your own SKU/quota/version/guardrails).
+
+   <Shot src="04c-deploy-menu-default.png" caption="Deploy menu — 'Default settings' boxed." />
+
+4. **The wall.** The "select a project to deploy" dialog shows **every region** reading **"(Insufficient quota)"** — East US 2, Sweden Central, UK South, West Europe, all of them. It's not a model or region problem. The subscription has **0 Azure OpenAI quota, account-wide.**
+
+   <Shot src="04d-quota-wall-all-regions.png" caption="THE WALL — every region says Insufficient quota. The subscription simply has no quota at all." />
+
+</Steps>
+
+<Aside type="caution" title="The big lesson">
+A brand-new free / free-credit subscription **cannot deploy an Azure OpenAI model out of the box.** Quota is zero everywhere. Plan for one of three unblocks: **(1)** upgrade to Pay-As-You-Go, **(2)** request a quota increase, or **(3)** deploy a **serverless** model that needs no Azure OpenAI quota at all.
+</Aside>
+
+## The upgrade that *doesn't* fully fix it
+
+The fix everyone reaches for first is upgrading the subscription to true Pay-As-You-Go.
+
+<Steps>
+
+1. **Subscriptions → your subscription → Overview** shows a yellow banner: *"Your remaining £200 of free credit expires in 30 days. Upgrade to keep going."* Click **Upgrade**.
+
+   <Shot src="05a-sub-upgrade-banner.png" caption="The free-credit 'Upgrade' banner (boxed)." />
+
+2. On the upgrade page, pick support plan **Basic – Included** (free), then **Upgrade now**. (This is the billing-authorisation step — it's the one click you do yourself.)
+
+   <Shot src="05b-upgrade-basic-selected-ready.png" caption="Upgrade page — Basic (free) selected, 'Upgrade now' boxed." />
+
+3. Re-try the deploy. **Still blocked.** Open **Operate → Quota → Tokens per minute → Show all** and you see why: the subscription was seeded default quota **only for older models** (GPT-3.5-Turbo, GPT-4) in **one region** — and **0** for `gpt-4o-mini` everywhere.
+
+   <Shot src="05c-quota-table-gpt4omini-zero.png" caption="The smoking gun: gpt-4o-mini · GlobalStandard · 0 of 0 TPM." />
+
+</Steps>
+
+<Aside type="note" title="And one more trap">
+For a **UK South** project, `gpt-4o-mini` is only offered as **Global Standard** (which processes data anywhere worldwide). The UK-data-residency options — *Regional* and *Data Zone* — aren't supported for that model in UK South at all. So even *with* quota, gpt-4o-mini is the wrong model for a UK-sovereign build. (More on the sovereign path at the [end](/foundry/08-instructions-and-run/#the-sovereign-production-path).)
+</Aside>
+
+So: PAYG alone doesn't grant model quota — you'd have to **Request quota** and wait. Rather than wait, the next page takes the third door.
+
+**Next:** [deploy a model without quota — serverless →](/foundry/05-serverless-model/)

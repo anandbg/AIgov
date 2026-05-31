@@ -1,0 +1,56 @@
+---
+title: "2. Create the Foundry resource"
+description: "A resource group to hold everything, then the Foundry resource and your first project — one form makes both."
+subtitle: "The container, the building, and the first room."
+---
+
+import Shot from '~/components/Shot.astro';
+import { Steps, Aside } from '@astrojs/starlight/components';
+
+Now we make three things: a **resource group** (a folder), the **Foundry resource** (the building), and a **project** (your first room inside it). The good news — one create form builds the resource and the project together.
+
+## In plain English
+
+Think of it as renting an office. The **resource group** is the folder where you keep all the paperwork for this office. The **Foundry resource** is the building itself. The **project** is the first room you'll actually work in. You set them all up in a couple of minutes.
+
+## Part A — the resource group (the folder)
+
+<Steps>
+
+1. Portal search → **Resource groups** → **+ Create**.
+
+   <Shot src="01a-rg-blade.png" caption="The empty 'Create a resource group' form." />
+
+2. Name it `rg-foundry-scraper`, region **(UK) UK South**.
+
+   <Shot src="01b-rg-form-filled.png" caption="Name and region filled in (boxed)." />
+
+3. **Review + create → Create**. You get a green "succeeded" toast.
+
+   <Shot src="01c-rg-created.png" caption="Resource group created." />
+
+</Steps>
+
+## Part B — the Foundry resource + project (one form)
+
+<Steps>
+
+1. **Create a resource** → search **"Azure AI Foundry"** → the **Microsoft Foundry** tile → **Create**. (Direct blade: `#create/Microsoft.CognitiveServicesAIFoundry`.)
+
+   <Shot src="02c-foundry-create-form-blank.png" caption="The blank Foundry create form. One form makes both the resource and the first project." />
+
+2. Fill the Basics: resource group `rg-foundry-scraper`, name `foundry-scraper-adc01` (this also becomes your unique subdomain), region **UK South**, default project name `proj-scraper`. Leave Storage / Networking / Identity / Encryption at defaults for this free-tier build.
+
+   <Shot src="02d-foundry-basics-filled.png" caption="Basics filled in (boxed). Other tabs left at defaults." />
+
+3. **Review + create → Create** (~1–2 min). The resource group now holds the Foundry resource **and** the project, both UK South.
+
+   <Shot src="02e-foundry-and-project-created.png" caption="Done — Foundry resource + project, status Succeeded." />
+
+</Steps>
+
+<Aside type="note" title="Why a separate region matters later">
+We chose **UK South** deliberately — this build is aimed at a UK-data-residency scenario. Keep that in mind: it's the right call for sovereignty, but it's also why a couple of steps later hit regional limits the US regions wouldn't.
+</Aside>
+
+**Next:** [switch to the new Foundry experience →](/foundry/03-new-experience/)
